@@ -1,0 +1,33 @@
+services:
+  # Python FastAPI Web Service
+  - type: web
+    name: enterprise-ai-support-backend
+    env: python
+    buildCommand: "./scripts/build.sh"
+    startCommand: "gunicorn -k uvicorn.workers.UvicornWorker -c gunicorn.conf.py app.main:app"
+    plan: starter
+    region: oregon
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: ENV
+        value: production
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "60"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: ai-support-cache
+          property: connectionString
+
+  # Redis instance for analytical cache and request rate limiting
+  - type: redis
+    name: ai-support-cache
+    plan: free
+    region: oregon
+    ipAllowList: [] # Private network only

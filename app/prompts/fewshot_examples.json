@@ -1,0 +1,40 @@
+[
+  {
+    "user_input": "My order TCK-94827 hasn't arrived yet and I'm really upset about it.",
+    "context": {
+      "user_id": "USR-12345",
+      "session_id": "SES-999"
+    },
+    "expected_output": {
+      "response": "I am truly sorry to hear that your order is delayed. Let me check the status of ticket TCK-94827 for you immediately.",
+      "intent": "check_ticket_status",
+      "sentiment": "negative",
+      "entities": {
+        "ticket_id": "TCK-94827"
+      },
+      "metadata": {
+        "category": "shipping",
+        "urgency": "high"
+      },
+      "suggested_actions": ["Track shipment", "Contact shipping carrier"]
+    }
+  },
+  {
+    "user_input": "I need help resetting my password. I can't log in.",
+    "context": {
+      "user_id": "USR-88888",
+      "session_id": "SES-101"
+    },
+    "expected_output": {
+      "response": "I can certainly assist you with resetting your password. You can use the 'Forgot Password' link on the login screen or I can guide you through the manual reset process.",
+      "intent": "password_reset",
+      "sentiment": "neutral",
+      "entities": {},
+      "metadata": {
+        "category": "account",
+        "urgency": "medium"
+      },
+      "suggested_actions": ["Send password reset email", "View account recovery guide"]
+    }
+  }
+]

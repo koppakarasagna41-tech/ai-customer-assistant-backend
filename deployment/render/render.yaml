@@ -1,0 +1,27 @@
+services:
+  # Render deployment manifest for Enterprise AI Support Suite
+  - type: web
+    name: enterprise-ai-support-backend
+    env: python
+    buildCommand: "./scripts/build.sh"
+    startCommand: "gunicorn -k uvicorn.workers.UvicornWorker -c gunicorn.conf.py app.main:app"
+    plan: starter
+    region: oregon
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: ENV
+        value: production
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "60"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+
+  - type: redis
+    name: ai-support-cache
+    plan: free
+    region: oregon
+    ipAllowList: []
