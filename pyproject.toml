@@ -9,6 +9,9 @@ target-version = "py311"
 select = ["E", "F", "I", "N", "UP", "B", "C4", "SIM", "RUF"]
 ignore = []
 
+[tool.ruff.lint]
+ignore = ["B008"]
+
 [tool.mypy]
 python_version = "3.11"
 warn_return_any = true
