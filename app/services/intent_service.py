@@ -1,11 +1,13 @@
-import os
 import json
 import logging
+import os
 import re
-from app.services.gemini_client import get_gemini_client, GeminiClient
-from app.schemas.intent import IntentResponse, IntentDetail
+
+from app.schemas.intent import IntentDetail, IntentResponse
+from app.services.gemini_client import GeminiClient, get_gemini_client
 
 logger = logging.getLogger("app.services.intent_service")
+
 
 class IntentService:
     def __init__(self, gemini_client: GeminiClient = None):
@@ -19,7 +21,7 @@ class IntentService:
     def _load_prompt(self):
         try:
             if os.path.exists(self.prompt_path):
-                with open(self.prompt_path, "r", encoding="utf-8") as f:
+                with open(self.prompt_path, encoding="utf-8") as f:
                     self.prompt = f.read()
             else:
                 self.prompt = "Detect intent from customer support messages."
@@ -49,9 +51,9 @@ class IntentService:
                 system_instruction=self.prompt,
                 response_schema=schema,
                 response_mime_type="application/json",
-                temperature=0.1
+                temperature=0.1,
             )
-            
+
             try:
                 raw_text = raw_res["candidates"][0]["content"]["parts"][0]["text"]
             except (KeyError, IndexError) as e:
@@ -60,22 +62,23 @@ class IntentService:
 
             cleaned = self.clean_json_string(raw_text)
             data = json.loads(cleaned) if cleaned else {}
-            
+
             intents_list = []
             for item in data.get("intents", []):
                 intents_list.append(
                     IntentDetail(
                         intent=str(item.get("intent", "general_inquiry")),
-                        confidence=float(item.get("confidence", 1.0))
+                        confidence=float(item.get("confidence", 1.0)),
                     )
                 )
             if not intents_list:
                 intents_list.append(IntentDetail(intent="general_inquiry", confidence=1.0))
             return IntentResponse(intents=intents_list)
-            
+
         except Exception as e:
             logger.error(f"IntentService error: {e}")
             return IntentResponse(intents=[IntentDetail(intent="general_inquiry", confidence=1.0)])
+
 
 def get_intent_service() -> IntentService:
     return IntentService()

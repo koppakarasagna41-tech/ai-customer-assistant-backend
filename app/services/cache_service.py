@@ -1,14 +1,15 @@
-import time
 import threading
-from typing import Dict, Any, Optional
+import time
+from typing import Any
+
 
 class CacheService:
     def __init__(self):
-        self._cache: Dict[str, Any] = {}
-        self._expire_times: Dict[str, float] = {}
+        self._cache: dict[str, Any] = {}
+        self._expire_times: dict[str, float] = {}
         self._lock = threading.Lock()
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         with self._lock:
             if key in self._cache:
                 expire_at = self._expire_times.get(key, 0.0)
@@ -38,7 +39,9 @@ class CacheService:
             self._cache.clear()
             self._expire_times.clear()
 
+
 _global_cache = CacheService()
+
 
 def get_cache_service() -> CacheService:
     return _global_cache

@@ -1,5 +1,4 @@
 import json
-import os
 
 modified_paths = ["/app/applet/app/api/v1/rag.py"]
 new_paths = [
@@ -24,27 +23,29 @@ new_paths = [
     "/app/applet/app/services/retriever.py",
     "/app/applet/app/services/document_indexer.py",
     "/app/applet/app/services/rag_service.py",
-    "/app/applet/app/routers/rag.py"
+    "/app/applet/app/routers/rag.py",
 ]
 
-res = {
-    "modified_files": [],
-    "new_files": []
-}
+res = {"modified_files": [], "new_files": []}
 
 for path in modified_paths:
-    with open(path, "r") as f:
+    with open(path) as f:
         code = f.read()
-    res["modified_files"].append({
-        "path": path.replace("/app/applet/app", "/app"),
-        "reason": "Overwrote placeholder search endpoint to support full query, search, indexing and listing.",
-        "code": code
-    })
+    res["modified_files"].append(
+        {
+            "path": path.replace("/app/applet/app", "/app"),
+            "reason": (
+                "Overwrote placeholder search endpoint to support full query, "
+                "search, indexing and listing."
+            ),
+            "code": code,
+        }
+    )
 
 for path in new_paths:
-    with open(path, "r") as f:
+    with open(path) as f:
         code = f.read()
-    
+
     if "schemas" in path:
         purpose = "Data transfer schema defining types for requests and responses."
     elif "prompts" in path:
@@ -52,11 +53,9 @@ for path in new_paths:
     else:
         purpose = "Service module orchestrating core business logic of the Enterprise RAG Pipeline."
 
-    res["new_files"].append({
-        "path": path.replace("/app/applet/app", "/app"),
-        "purpose": purpose,
-        "code": code
-    })
+    res["new_files"].append(
+        {"path": path.replace("/app/applet/app", "/app"), "purpose": purpose, "code": code}
+    )
 
 # Output JSON back to workspace
 with open("/app/applet/app/output.json", "w") as f:

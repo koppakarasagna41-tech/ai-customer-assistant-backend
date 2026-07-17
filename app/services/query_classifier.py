@@ -1,18 +1,20 @@
-import re
 import logging
-from typing import Dict, Any
+import re
+from typing import Any
 
 logger = logging.getLogger("app.services.query_classifier")
+
 
 class QueryClassifier:
     """
     Classifies queries locally using pattern matching and regular expressions.
     Extracts key product entities, categories, and ticket IDs to optimize routing.
     """
+
     @staticmethod
-    def classify_query(query: str) -> Dict[str, Any]:
+    def classify_query(query: str) -> dict[str, Any]:
         q = query.lower()
-        
+
         # Default classification
         category = "general"
         urgency = "medium"
@@ -33,24 +35,31 @@ class QueryClassifier:
                 entities["product"] = p
 
         # Intent categorization
-        if any(w in q for w in ["refund", "billing", "pricing", "cost", "invoice", "payment", "subscription"]):
+        if any(
+            w in q
+            for w in ["refund", "billing", "pricing", "cost", "invoice", "payment", "subscription"]
+        ):
             category = "billing"
             if any(w in q for w in ["charge twice", "wrong charge", "fraud"]):
                 urgency = "high"
-        elif any(w in q for w in ["password", "reset", "login", "account", "mfa", "sign in", "signup"]):
+        elif any(
+            w in q for w in ["password", "reset", "login", "account", "mfa", "sign in", "signup"]
+        ):
             category = "account"
-        elif any(w in q for w in ["bug", "error", "crash", "broken", "fail", "slow", "down", "not working"]):
+        elif any(
+            w in q
+            for w in ["bug", "error", "crash", "broken", "fail", "slow", "down", "not working"]
+        ):
             category = "troubleshooting"
             urgency = "high"
-        elif any(w in q for w in ["how to", "guide", "documentation", "manual", "setup", "install"]):
+        elif any(
+            w in q for w in ["how to", "guide", "documentation", "manual", "setup", "install"]
+        ):
             category = "documentation"
             urgency = "low"
 
-        return {
-            "category": category,
-            "urgency": urgency,
-            "entities": entities
-        }
+        return {"category": category, "urgency": urgency, "entities": entities}
+
 
 def get_query_classifier() -> QueryClassifier:
     return QueryClassifier()

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+
 
 class KPIDetail(BaseModel):
     name: str = Field(..., description="Name of the key performance indicator")
@@ -9,6 +9,7 @@ class KPIDetail(BaseModel):
     status: str = Field(..., description="Status of the KPI (ON_TRACK, AT_RISK, BEHIND)")
     trend: str = Field(..., description="Trend direction (UP, DOWN, STABLE)")
     change_percentage: float = Field(..., description="Percentage change from the previous period")
+
 
 class KPIOverview(BaseModel):
     ticket_resolution_rate: KPIDetail = Field(..., description="KPI for ticket resolution rate")

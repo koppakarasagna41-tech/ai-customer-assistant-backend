@@ -1,10 +1,14 @@
-from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
 from datetime import datetime
+
+from pydantic import BaseModel, Field
+
 
 class PromptEvaluationRequest(BaseModel):
     prompt: str = Field(..., description="The user prompt text to evaluate")
-    context_type: Optional[str] = Field("chat", description="Optional context type (chat, rag, document)")
+    context_type: str | None = Field(
+        "chat", description="Optional context type (chat, rag, document)"
+    )
+
 
 class NormalizationDetails(BaseModel):
     original_length: int
@@ -12,17 +16,20 @@ class NormalizationDetails(BaseModel):
     unicode_normalized: bool
     hidden_chars_removed: int
 
+
 class InjectionAnalysis(BaseModel):
     detected: bool
     confidence: float
-    threat_type: Optional[str] = None
-    matched_pattern: Optional[str] = None
+    threat_type: str | None = None
+    matched_pattern: str | None = None
+
 
 class JailbreakAnalysis(BaseModel):
     detected: bool
     confidence: float
-    threat_type: Optional[str] = None
-    matched_pattern: Optional[str] = None
+    threat_type: str | None = None
+    matched_pattern: str | None = None
+
 
 class PromptEvaluationResult(BaseModel):
     is_safe: bool

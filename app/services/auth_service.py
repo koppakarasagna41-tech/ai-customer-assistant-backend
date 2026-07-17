@@ -1,14 +1,15 @@
 import random
-from datetime import datetime, timezone, timedelta
-from typing import Optional, List
-from app.repositories.user_repository import UserRepository, get_user_repository
+from datetime import UTC, datetime
+
 from app.models.user import User, UserInDB
-from app.schemas.user import UserCreate
+from app.repositories.user_repository import UserRepository, get_user_repository
 from app.schemas.auth import LoginCredentials
 from app.schemas.token import Token
+from app.schemas.user import UserCreate
+from app.security.jwt import ACCESS_TOKEN_EXPIRE_MINUTES, JWTManager
 from app.security.password import PasswordHasher
-from app.security.jwt import JWTManager, ACCESS_TOKEN_EXPIRE_MINUTES
 from app.security.permissions import ROLE_PERMISSIONS
+
 
 class AuthService:
     def __init__(self, repository: UserRepository):
@@ -35,7 +36,7 @@ class AuthService:
             raise ValueError(f"Invalid role '{data.role}'. Must be one of {valid_roles}")
 
         user_id = self._generate_user_id()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         hashed_password = PasswordHasher.hash_password(data.password)
         perms = [p.value for p in ROLE_PERMISSIONS.get(role, [])]
 
@@ -49,7 +50,7 @@ class AuthService:
             created_at=now,
             updated_at=now,
             permissions=perms,
-            hashed_password=hashed_password
+            hashed_password=hashed_password,
         )
 
         created_user = await self.repository.create(user_in_db)
@@ -74,28 +75,24 @@ class AuthService:
 
     async def login(self, credentials: LoginCredentials) -> Token:
         user = await self.authenticate_user(credentials)
-        
-        token_data = {
-            "sub": user.user_id,
-            "role": user.role,
-            "username": user.username
-        }
-        
+
+        token_data = {"sub": user.user_id, "role": user.role, "username": user.username}
+
         access_token = JWTManager.create_access_token(token_data)
         refresh_token = JWTManager.create_refresh_token(token_data)
-        
+
         return Token(
             access_token=access_token,
             refresh_token=refresh_token,
             token_type="bearer",
-            expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60
+            expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         )
 
     async def refresh_token(self, refresh_token: str) -> Token:
         try:
             payload = JWTManager.decode_token(refresh_token)
-        except ValueError as e:
-            raise ValueError(f"Invalid refresh token: {str(e)}")
+        except ValueError as exc:
+            raise ValueError(f"Invalid refresh token: {exc!s}") from exc
 
         if payload.get("type") != "refresh":
             raise ValueError("Token provided is not a refresh token.")
@@ -108,11 +105,7 @@ class AuthService:
         if not user or not user.is_active:
             raise ValueError("User associated with this refresh token is inactive or not found.")
 
-        token_data = {
-            "sub": user.user_id,
-            "role": user.role,
-            "username": user.username
-        }
+        token_data = {"sub": user.user_id, "role": user.role, "username": user.username}
 
         access_token = JWTManager.create_access_token(token_data)
         new_refresh_token = JWTManager.create_refresh_token(token_data)
@@ -121,8 +114,9 @@ class AuthService:
             access_token=access_token,
             refresh_token=new_refresh_token,
             token_type="bearer",
-            expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60
+            expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         )
+
 
 def get_auth_service() -> AuthService:
     repo = get_user_repository()

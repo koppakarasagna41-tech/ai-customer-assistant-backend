@@ -1,15 +1,20 @@
-from pydantic import BaseModel, Field
-from typing import Dict, Any, Optional
 from datetime import datetime
+from typing import Any
+
+from pydantic import BaseModel, Field
+
 
 class DocumentMetadata(BaseModel):
-    title: Optional[str] = Field(None, description="Title of the document")
-    source: Optional[str] = Field(None, description="Source file path or URL")
-    author: Optional[str] = Field(None, description="Author of the document")
-    category: Optional[str] = Field(None, description="Category (e.g., policy, support, faq)")
-    product: Optional[str] = Field(None, description="Product associated with the document")
-    created_at: Optional[datetime] = Field(default_factory=datetime.utcnow)
-    custom_metadata: Dict[str, Any] = Field(default_factory=dict, description="Any other custom metadata keys")
+    title: str | None = Field(None, description="Title of the document")
+    source: str | None = Field(None, description="Source file path or URL")
+    author: str | None = Field(None, description="Author of the document")
+    category: str | None = Field(None, description="Category (e.g., policy, support, faq)")
+    product: str | None = Field(None, description="Product associated with the document")
+    created_at: datetime | None = Field(default_factory=datetime.utcnow)
+    custom_metadata: dict[str, Any] = Field(
+        default_factory=dict, description="Any other custom metadata keys"
+    )
+
 
 class Document(BaseModel):
     id: str = Field(..., description="Unique document identifier")

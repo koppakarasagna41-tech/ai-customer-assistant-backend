@@ -1,11 +1,13 @@
-import os
 import json
 import logging
+import os
 import re
-from app.services.gemini_client import get_gemini_client, GeminiClient
-from app.schemas.classification import ClassificationResponse, ClassificationDetail
+
+from app.schemas.classification import ClassificationDetail, ClassificationResponse
+from app.services.gemini_client import GeminiClient, get_gemini_client
 
 logger = logging.getLogger("app.services.classification_service")
+
 
 class ClassificationService:
     def __init__(self, gemini_client: GeminiClient = None):
@@ -19,7 +21,7 @@ class ClassificationService:
     def _load_prompt(self):
         try:
             if os.path.exists(self.prompt_path):
-                with open(self.prompt_path, "r", encoding="utf-8") as f:
+                with open(self.prompt_path, encoding="utf-8") as f:
                     self.prompt = f.read()
             else:
                 self.prompt = "Classify support tickets into enterprise categories."
@@ -37,7 +39,9 @@ class ClassificationService:
 
     async def classify_ticket(self, text: str) -> ClassificationResponse:
         if not text:
-            return ClassificationResponse(classifications=[ClassificationDetail(category="TECHNICAL", confidence=1.0)])
+            return ClassificationResponse(
+                classifications=[ClassificationDetail(category="TECHNICAL", confidence=1.0)]
+            )
 
         try:
             schema = ClassificationResponse.model_json_schema()
@@ -49,33 +53,40 @@ class ClassificationService:
                 system_instruction=self.prompt,
                 response_schema=schema,
                 response_mime_type="application/json",
-                temperature=0.1
+                temperature=0.1,
             )
-            
+
             try:
                 raw_text = raw_res["candidates"][0]["content"]["parts"][0]["text"]
             except (KeyError, IndexError) as e:
-                logger.error(f"Malformed response format from Gemini client in ClassificationService: {e}")
+                logger.error(
+                    f"Malformed response format from Gemini client in ClassificationService: {e}"
+                )
                 raw_text = "{}"
 
             cleaned = self.clean_json_string(raw_text)
             data = json.loads(cleaned) if cleaned else {}
-            
+
             classifications_list = []
             for item in data.get("classifications", []):
                 classifications_list.append(
                     ClassificationDetail(
                         category=str(item.get("category", "TECHNICAL")),
-                        confidence=float(item.get("confidence", 1.0))
+                        confidence=float(item.get("confidence", 1.0)),
                     )
                 )
             if not classifications_list:
-                classifications_list.append(ClassificationDetail(category="TECHNICAL", confidence=1.0))
+                classifications_list.append(
+                    ClassificationDetail(category="TECHNICAL", confidence=1.0)
+                )
             return ClassificationResponse(classifications=classifications_list)
-            
+
         except Exception as e:
             logger.error(f"ClassificationService error: {e}")
-            return ClassificationResponse(classifications=[ClassificationDetail(category="TECHNICAL", confidence=1.0)])
+            return ClassificationResponse(
+                classifications=[ClassificationDetail(category="TECHNICAL", confidence=1.0)]
+            )
+
 
 def get_classification_service() -> ClassificationService:
     return ClassificationService()

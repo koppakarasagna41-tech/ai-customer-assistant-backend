@@ -1,14 +1,16 @@
 import csv
-import json
 import io
-from typing import Dict, Any, List
+import json
+from typing import Any
+
 from app.schemas.export import ExportResponse
 
+
 class ExportService:
-    def export_to_csv(self, metrics: Dict[str, Any]) -> bytes:
+    def export_to_csv(self, metrics: dict[str, Any]) -> bytes:
         output = io.StringIO()
         writer = csv.writer(output)
-        
+
         # Section 1: KPIs
         writer.writerow(["--- KEY PERFORMANCE INDICATORS ---"])
         writer.writerow(["Metric", "Current Value", "Target", "Unit", "Status"])
@@ -43,11 +45,12 @@ class ExportService:
 
         return output.getvalue().encode("utf-8")
 
-    def export_to_json(self, metrics: Dict[str, Any]) -> bytes:
+    def export_to_json(self, metrics: dict[str, Any]) -> bytes:
         return json.dumps(metrics, indent=2, default=str).encode("utf-8")
 
-    def export_to_excel(self, metrics: Dict[str, Any]) -> bytes:
-        # Since we might not have openpyxl, excel can be exported as tab-separated values (TSV) or a CSV with excel format
+    def export_to_excel(self, metrics: dict[str, Any]) -> bytes:
+        # Since we might not have openpyxl, excel can be exported as tab-separated
+        # values (TSV) or a CSV with excel format
         output = io.StringIO()
         writer = csv.writer(output, dialect="excel")
         writer.writerow(["Customer Support Platform Enterprise Analytics Excel Export"])
@@ -68,20 +71,24 @@ class ExportService:
                 writer.writerow([k, v])
         return output.getvalue().encode("utf-8")
 
-    def export_to_pdf(self, metrics: Dict[str, Any]) -> bytes:
+    def export_to_pdf(self, metrics: dict[str, Any]) -> bytes:
         # Generate clean plain text formatting mimicking a PDF report structure
         output = io.StringIO()
         output.write("==============================================\n")
         output.write("        ENTERPRISE ANALYTICS REPORT           \n")
         output.write("==============================================\n\n")
         output.write(f"Generated at: {metrics.get('last_updated', '2026-07-16T12:00:00Z')}\n\n")
-        
+
         output.write("1. KEY METRICS SUMMARY:\n")
         output.write(f" - Total Tickets: {metrics.get('total_tickets', 1240)}\n")
         output.write(f" - Resolved Tickets: {metrics.get('resolved_tickets', 1100)}\n")
-        output.write(f" - Resolution Rate: 88.7%\n")
-        output.write(f" - Average Resolution Time: {metrics.get('avg_resolution_time_hrs', 2.4)} hours\n")
-        output.write(f" - Customer Satisfaction: {metrics.get('customer_satisfaction_score', 4.65)}/5.00\n\n")
+        output.write(" - Resolution Rate: 88.7%\n")
+        output.write(
+            f" - Average Resolution Time: {metrics.get('avg_resolution_time_hrs', 2.4)} hours\n"
+        )
+        output.write(
+            f" - Customer Satisfaction: {metrics.get('customer_satisfaction_score', 4.65)}/5.00\n\n"
+        )
 
         output.write("2. AI INTEGRATION & TOKENS:\n")
         token_usage = metrics.get("token_usage", {})
@@ -97,27 +104,22 @@ class ExportService:
         output.write(f" - API Uptime: {system_health.get('api_uptime', 99.98)}%\n")
         output.write(f" - P95 Latency: {system_health.get('p95_latency_ms', 52.0)} ms\n")
         output.write(f" - Error Rate: {system_health.get('error_rate', 0.0)}%\n")
-        
+
         return output.getvalue().encode("utf-8")
 
-    def perform_export(self, format: str, metrics: Dict[str, Any]) -> ExportResponse:
+    def perform_export(self, format: str, metrics: dict[str, Any]) -> ExportResponse:
         fmt_lower = format.lower()
         if fmt_lower == "csv":
             content = self.export_to_csv(metrics)
-            mime_type = "text/csv"
         elif fmt_lower == "json":
             content = self.export_to_json(metrics)
-            mime_type = "application/json"
         elif fmt_lower == "excel":
             content = self.export_to_excel(metrics)
-            mime_type = "application/vnd.ms-excel"
         elif fmt_lower == "pdf":
             content = self.export_to_pdf(metrics)
-            mime_type = "application/pdf"
         else:
             content = self.export_to_csv(metrics)
             fmt_lower = "csv"
-            mime_type = "text/csv"
 
         size = len(content)
         # In a production setup, we would save to temporary files or cloud storage and return URL
@@ -129,10 +131,12 @@ class ExportService:
             download_url=download_url,
             format=fmt_lower,
             size_bytes=size,
-            status="COMPLETED"
+            status="COMPLETED",
         )
 
+
 _global_export_service = ExportService()
+
 
 def get_export_service() -> ExportService:
     return _global_export_service

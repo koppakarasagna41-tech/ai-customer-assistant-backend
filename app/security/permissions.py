@@ -1,8 +1,9 @@
-from enum import Enum
-from typing import List, Dict
+from enum import StrEnum
+
 from app.security.roles import UserRole
 
-class Permission(str, Enum):
+
+class Permission(StrEnum):
     CREATE_TICKET = "create_ticket"
     UPDATE_TICKET = "update_ticket"
     DELETE_TICKET = "delete_ticket"
@@ -13,8 +14,9 @@ class Permission(str, Enum):
     MANAGE_KNOWLEDGE_BASE = "manage_knowledge_base"
     MANAGE_USERS = "manage_users"
 
+
 # Define default permissions for each role
-ROLE_PERMISSIONS: Dict[str, List[Permission]] = {
+ROLE_PERMISSIONS: dict[str, list[Permission]] = {
     UserRole.CUSTOMER.value: [
         Permission.CREATE_TICKET,
         Permission.UPDATE_TICKET,

@@ -1,5 +1,6 @@
 from app.schemas.kpi import KPIDetail, KPIOverview
-from app.services.metrics_service import get_metrics_service, MetricsService
+from app.services.metrics_service import MetricsService, get_metrics_service
+
 
 class KPIService:
     def __init__(self, metrics_service: MetricsService = None):
@@ -21,7 +22,7 @@ class KPIService:
                 unit="%",
                 status="ON_TRACK" if resolution_rate >= 85.0 else "AT_RISK",
                 trend="UP",
-                change_percentage=1.4
+                change_percentage=1.4,
             ),
             avg_response_time=KPIDetail(
                 name="Average Response Time",
@@ -30,7 +31,7 @@ class KPIService:
                 unit="min",
                 status="ON_TRACK" if m["avg_response_time_min"] <= 15.0 else "BEHIND",
                 trend="DOWN",
-                change_percentage=-8.5
+                change_percentage=-8.5,
             ),
             customer_satisfaction=KPIDetail(
                 name="Customer Satisfaction Score",
@@ -39,7 +40,7 @@ class KPIService:
                 unit="pts",
                 status="ON_TRACK" if m["customer_satisfaction_score"] >= 4.5 else "AT_RISK",
                 trend="UP",
-                change_percentage=2.1
+                change_percentage=2.1,
             ),
             ai_handling_rate=KPIDetail(
                 name="AI Autonomous Handling Rate",
@@ -48,7 +49,7 @@ class KPIService:
                 unit="%",
                 status="ON_TRACK" if rag["success_rate"] >= 80.0 else "AT_RISK",
                 trend="UP",
-                change_percentage=3.8
+                change_percentage=3.8,
             ),
             cost_efficiency=KPIDetail(
                 name="AI Cost Efficiency",
@@ -57,11 +58,13 @@ class KPIService:
                 unit="USD",
                 status="ON_TRACK" if costs["cost_per_ticket"] <= 0.05 else "AT_RISK",
                 trend="DOWN",
-                change_percentage=-12.4
-            )
+                change_percentage=-12.4,
+            ),
         )
 
+
 _global_kpi_service = KPIService()
+
 
 def get_kpi_service() -> KPIService:
     return _global_kpi_service

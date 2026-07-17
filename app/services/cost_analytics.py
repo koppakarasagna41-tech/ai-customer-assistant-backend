@@ -1,5 +1,7 @@
-from app.services.token_usage_service import get_token_usage_service, TokenUsageService
-from typing import Dict, Any, List
+from typing import Any
+
+from app.services.token_usage_service import TokenUsageService, get_token_usage_service
+
 
 class CostAnalyticsService:
     def __init__(self, token_usage_service: TokenUsageService = None):
@@ -13,13 +15,12 @@ class CostAnalyticsService:
         completion_cost = (completion_tokens / 1000.0) * self.completion_token_cost_1k
         return round(prompt_cost + completion_cost, 4)
 
-    def get_cost_summary(self, days: int = 7) -> Dict[str, Any]:
+    def get_cost_summary(self, days: int = 7) -> dict[str, Any]:
         token_summary = self.token_usage_service.get_aggregated_usage(days=days)
         total_cost = self.calculate_cost(
-            token_summary["prompt_tokens"],
-            token_summary["completion_tokens"]
+            token_summary["prompt_tokens"], token_summary["completion_tokens"]
         )
-        
+
         # Assume average of 10 tickets resolved per day on average in that period
         avg_tickets = 120
         cost_per_ticket = round(total_cost / max(1, avg_tickets), 4)
@@ -30,23 +31,27 @@ class CostAnalyticsService:
             "currency": "USD",
             "pricing_model": {
                 "prompt_cost_per_1k": self.prompt_token_cost_1k,
-                "completion_cost_per_1k": self.completion_token_cost_1k
-            }
+                "completion_cost_per_1k": self.completion_token_cost_1k,
+            },
         }
 
-    def get_cost_trend(self) -> List[Dict[str, Any]]:
+    def get_cost_trend(self) -> list[dict[str, Any]]:
         history = self.token_usage_service.get_history()
         trend = []
         for entry in history:
             cost = self.calculate_cost(entry["prompt_tokens"], entry["completion_tokens"])
-            trend.append({
-                "timestamp": entry["timestamp"],
-                "cost": cost,
-                "total_tokens": entry["total_tokens"]
-            })
+            trend.append(
+                {
+                    "timestamp": entry["timestamp"],
+                    "cost": cost,
+                    "total_tokens": entry["total_tokens"],
+                }
+            )
         return trend
 
+
 _global_cost_analytics_service = CostAnalyticsService()
+
 
 def get_cost_analytics_service() -> CostAnalyticsService:
     return _global_cost_analytics_service

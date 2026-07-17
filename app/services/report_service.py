@@ -1,19 +1,18 @@
 import uuid
 from datetime import datetime, timedelta
-from typing import List, Optional
-from app.schemas.report import ReportRequest, ScheduledReportConfig, ReportMetadata
-from app.services.metrics_service import get_metrics_service, MetricsService
-from app.services.export_service import get_export_service, ExportService
+
+from app.schemas.report import ReportMetadata, ReportRequest, ScheduledReportConfig
+from app.services.export_service import ExportService, get_export_service
+from app.services.metrics_service import MetricsService, get_metrics_service
+
 
 class ReportService:
     def __init__(
-        self,
-        metrics_service: MetricsService = None,
-        export_service: ExportService = None
+        self, metrics_service: MetricsService = None, export_service: ExportService = None
     ):
         self.metrics_service = metrics_service or get_metrics_service()
         self.export_service = export_service or get_export_service()
-        self._schedules: List[ScheduledReportConfig] = [
+        self._schedules: list[ScheduledReportConfig] = [
             ScheduledReportConfig(
                 id="SCH_001",
                 title="Daily Executive Performance Report",
@@ -21,7 +20,7 @@ class ReportService:
                 recipients=["executive-team@company.com"],
                 format="pdf",
                 is_active=True,
-                next_run=datetime.utcnow() + timedelta(days=1)
+                next_run=datetime.utcnow() + timedelta(days=1),
             ),
             ScheduledReportConfig(
                 id="SCH_002",
@@ -30,7 +29,7 @@ class ReportService:
                 recipients=["support-operations@company.com", "managers@company.com"],
                 format="csv",
                 is_active=True,
-                next_run=datetime.utcnow() + timedelta(days=5)
+                next_run=datetime.utcnow() + timedelta(days=5),
             ),
             ScheduledReportConfig(
                 id="SCH_003",
@@ -39,14 +38,14 @@ class ReportService:
                 recipients=["finance-billing@company.com", "executive-team@company.com"],
                 format="excel",
                 is_active=False,
-                next_run=datetime.utcnow() + timedelta(days=20)
-            )
+                next_run=datetime.utcnow() + timedelta(days=20),
+            ),
         ]
 
     def generate_custom_report(self, request: ReportRequest) -> ReportMetadata:
         metrics = self.metrics_service.get_comprehensive_metrics()
         export_res = self.export_service.perform_export(request.format, metrics)
-        
+
         return ReportMetadata(
             id="REP_" + uuid.uuid4().hex[:8],
             title=request.title,
@@ -54,10 +53,10 @@ class ReportService:
             size_bytes=export_res.size_bytes,
             created_at=datetime.utcnow(),
             download_url=export_res.download_url,
-            created_by="manual"
+            created_by="manual",
         )
 
-    def get_scheduled_reports(self) -> List[ScheduledReportConfig]:
+    def get_scheduled_reports(self) -> list[ScheduledReportConfig]:
         return self._schedules
 
     def create_scheduled_report(self, config: ScheduledReportConfig) -> ScheduledReportConfig:
@@ -72,14 +71,18 @@ class ReportService:
         self._schedules.append(config)
         return config
 
-    def toggle_scheduled_report(self, schedule_id: str, is_active: bool) -> Optional[ScheduledReportConfig]:
+    def toggle_scheduled_report(
+        self, schedule_id: str, is_active: bool
+    ) -> ScheduledReportConfig | None:
         for sch in self._schedules:
             if sch.id == schedule_id:
                 sch.is_active = is_active
                 return sch
         return None
 
+
 _global_report_service = ReportService()
+
 
 def get_report_service() -> ReportService:
     return _global_report_service

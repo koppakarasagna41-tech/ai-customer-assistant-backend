@@ -1,8 +1,9 @@
 import logging
-from typing import List
+
 from app.schemas.message import Message
 
 logger = logging.getLogger("app.services.token_optimizer")
+
 
 class TokenOptimizer:
     @staticmethod
@@ -20,10 +21,7 @@ class TokenOptimizer:
         return TokenOptimizer.estimate_tokens(message.content) + 4
 
     @staticmethod
-    def optimize_history(
-        history: List[Message],
-        max_tokens: int = 4000
-    ) -> List[Message]:
+    def optimize_history(history: list[Message], max_tokens: int = 4000) -> list[Message]:
         """
         Optimizes history by removing older messages or duplicate messages
         until the total token count is within max_tokens.
@@ -33,7 +31,7 @@ class TokenOptimizer:
         optimized = []
         total_tokens = 0
         seen_contents = set()
-        
+
         # Iterate backwards to preserve the most recent messages
         for msg in reversed(history):
             # Input Optimization: Prevent duplicate or consecutive duplicate messages
@@ -41,21 +39,24 @@ class TokenOptimizer:
             if normalized_content in seen_contents:
                 logger.info(f"Omitting duplicate historical message: {msg.content[:30]}...")
                 continue
-            
+
             seen_contents.add(normalized_content)
-            
+
             tokens = TokenOptimizer.estimate_message_tokens(msg)
             if total_tokens + tokens > max_tokens:
-                logger.info(f"Optimizing context window: Truncating history after reaching limit of {max_tokens} tokens.")
+                logger.info(
+                    "Optimizing context window: Truncating history after reaching "
+                    f"limit of {max_tokens} tokens."
+                )
                 break
-                
+
             optimized.insert(0, msg)
             total_tokens += tokens
-            
+
         return optimized
 
     @staticmethod
-    def should_summarize(history: List[Message], threshold_tokens: int = 3000) -> bool:
+    def should_summarize(history: list[Message], threshold_tokens: int = 3000) -> bool:
         """
         Determines whether the conversation is long enough to trigger auto-summarization.
         """

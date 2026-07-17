@@ -1,11 +1,13 @@
-import os
 import json
 import logging
+import os
 import re
-from app.services.gemini_client import get_gemini_client, GeminiClient
-from app.schemas.sentiment import SentimentResponse, SentimentDetail
+
+from app.schemas.sentiment import SentimentDetail, SentimentResponse
+from app.services.gemini_client import GeminiClient, get_gemini_client
 
 logger = logging.getLogger("app.services.sentiment_service")
+
 
 class SentimentService:
     def __init__(self, gemini_client: GeminiClient = None):
@@ -19,7 +21,7 @@ class SentimentService:
     def _load_prompt(self):
         try:
             if os.path.exists(self.prompt_path):
-                with open(self.prompt_path, "r", encoding="utf-8") as f:
+                with open(self.prompt_path, encoding="utf-8") as f:
                     self.prompt = f.read()
             else:
                 self.prompt = "Analyze sentiment of support messages."
@@ -38,47 +40,51 @@ class SentimentService:
     async def analyze_sentiment(self, text: str) -> SentimentResponse:
         if not text:
             return SentimentResponse(
-                sentiment=SentimentDetail(label="neutral", score=0.5),
-                escalation_recommended=False
+                sentiment=SentimentDetail(label="neutral", score=0.5), escalation_recommended=False
             )
 
         try:
             schema = SentimentResponse.model_json_schema()
             contents = [
-                {"role": "user", "parts": [{"text": f"Message to analyze sentiment from:\n\n{text}"}]}
+                {
+                    "role": "user",
+                    "parts": [{"text": f"Message to analyze sentiment from:\n\n{text}"}],
+                }
             ]
             raw_res = await self.client.generate_content(
                 contents=contents,
                 system_instruction=self.prompt,
                 response_schema=schema,
                 response_mime_type="application/json",
-                temperature=0.1
+                temperature=0.1,
             )
-            
+
             try:
                 raw_text = raw_res["candidates"][0]["content"]["parts"][0]["text"]
             except (KeyError, IndexError) as e:
-                logger.error(f"Malformed response format from Gemini client in SentimentService: {e}")
+                logger.error(
+                    f"Malformed response format from Gemini client in SentimentService: {e}"
+                )
                 raw_text = "{}"
 
             cleaned = self.clean_json_string(raw_text)
             data = json.loads(cleaned) if cleaned else {}
-            
+
             sent_data = data.get("sentiment", {})
             return SentimentResponse(
                 sentiment=SentimentDetail(
                     label=str(sent_data.get("label", "neutral")),
-                    score=float(sent_data.get("score", 0.5))
+                    score=float(sent_data.get("score", 0.5)),
                 ),
-                escalation_recommended=bool(data.get("escalation_recommended", False))
+                escalation_recommended=bool(data.get("escalation_recommended", False)),
             )
-            
+
         except Exception as e:
             logger.error(f"SentimentService error: {e}")
             return SentimentResponse(
-                sentiment=SentimentDetail(label="neutral", score=0.5),
-                escalation_recommended=False
+                sentiment=SentimentDetail(label="neutral", score=0.5), escalation_recommended=False
             )
+
 
 def get_sentiment_service() -> SentimentService:
     return SentimentService()

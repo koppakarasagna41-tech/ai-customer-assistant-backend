@@ -1,14 +1,20 @@
 import random
-from datetime import datetime, timezone
-from typing import List, Optional, Tuple, Dict, Any
+from datetime import UTC, datetime
+from typing import Any
+
+from app.models.ticket import Ticket, TicketComment, TicketTimelineEvent
 from app.repositories.ticket_repository import TicketRepository, get_ticket_repository
-from app.models.ticket import Ticket, TicketTimelineEvent, TicketComment
-from app.schemas.ticket import (
-    TicketCreate, TicketUpdate, TicketStatusUpdate, 
-    TicketPriorityUpdate, TicketAgentAssign, TicketCommentCreate
-)
 from app.schemas.filter import TicketFilterParams
+from app.schemas.ticket import (
+    TicketAgentAssign,
+    TicketCommentCreate,
+    TicketCreate,
+    TicketPriorityUpdate,
+    TicketStatusUpdate,
+    TicketUpdate,
+)
 from app.utils.ticket_validator import TicketValidator
+
 
 class TicketService:
     def __init__(self, repository: TicketRepository):
@@ -24,18 +30,18 @@ class TicketService:
         TicketValidator.validate_priority(data.priority)
         sanitized_title = TicketValidator.sanitize_text(data.title)
         sanitized_desc = TicketValidator.sanitize_text(data.description)
-        
+
         ticket_id = self._generate_ticket_id()
-        now = datetime.now(timezone.utc)
-        
+        now = datetime.now(UTC)
+
         timeline_event = TicketTimelineEvent(
             event_id=f"EVT-{random.randint(1000, 9999)}",
             event_type="created",
             actor=actor,
             description=f"Ticket successfully submitted by {actor}.",
-            timestamp=now
+            timestamp=now,
         )
-        
+
         ticket = Ticket(
             ticket_id=ticket_id,
             title=sanitized_title,
@@ -46,9 +52,9 @@ class TicketService:
             created_at=now,
             updated_at=now,
             timeline=[timeline_event],
-            comments=[]
+            comments=[],
         )
-        
+
         return await self.repository.create(ticket)
 
     async def get_ticket(self, ticket_id: str) -> Ticket:
@@ -57,12 +63,14 @@ class TicketService:
             raise ValueError(f"Ticket with ID '{ticket_id}' not found.")
         return ticket
 
-    async def update_ticket(self, ticket_id: str, data: TicketUpdate, actor: str = "system") -> Ticket:
+    async def update_ticket(
+        self, ticket_id: str, data: TicketUpdate, actor: str = "system"
+    ) -> Ticket:
         ticket = await self.get_ticket(ticket_id)
-        now = datetime.now(timezone.utc)
-        
+        now = datetime.now(UTC)
+
         updated_fields = []
-        
+
         if data.title is not None:
             ticket.title = TicketValidator.sanitize_text(data.title)
             updated_fields.append("title")
@@ -81,7 +89,7 @@ class TicketService:
             TicketValidator.validate_status_transition(ticket.status, data.status)
             ticket.status = data.status.lower()
             updated_fields.append("status")
-            
+
         if updated_fields:
             ticket.updated_at = now
             event = TicketTimelineEvent(
@@ -89,102 +97,106 @@ class TicketService:
                 event_type="updated",
                 actor=actor,
                 description=f"Updated properties: {', '.join(updated_fields)}.",
-                timestamp=now
+                timestamp=now,
             )
             ticket.timeline.append(event)
             await self.repository.update(ticket)
-            
+
         return ticket
 
-    async def update_status(self, ticket_id: str, payload: TicketStatusUpdate, actor: str) -> Ticket:
+    async def update_status(
+        self, ticket_id: str, payload: TicketStatusUpdate, actor: str
+    ) -> Ticket:
         ticket = await self.get_ticket(ticket_id)
         TicketValidator.validate_status(payload.status)
         TicketValidator.validate_status_transition(ticket.status, payload.status)
-        
+
         old_status = ticket.status
         ticket.status = payload.status.lower()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         ticket.updated_at = now
-        
+
         desc = f"Status transitioned from '{old_status}' to '{payload.status}'."
         if payload.comment:
             desc += f" Reason: {payload.comment}"
-            
+
         event = TicketTimelineEvent(
             event_id=f"EVT-{random.randint(1000, 9999)}",
             event_type="status_updated",
             actor=actor,
             description=desc,
-            timestamp=now
+            timestamp=now,
         )
         ticket.timeline.append(event)
         return await self.repository.update(ticket)
 
-    async def update_priority(self, ticket_id: str, payload: TicketPriorityUpdate, actor: str) -> Ticket:
+    async def update_priority(
+        self, ticket_id: str, payload: TicketPriorityUpdate, actor: str
+    ) -> Ticket:
         ticket = await self.get_ticket(ticket_id)
         TicketValidator.validate_priority(payload.priority)
-        
+
         old_priority = ticket.priority
         ticket.priority = payload.priority.lower()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         ticket.updated_at = now
-        
+
         desc = f"Priority escalated/changed from '{old_priority}' to '{payload.priority}'."
         if payload.comment:
             desc += f" Comment: {payload.comment}"
-            
+
         event = TicketTimelineEvent(
             event_id=f"EVT-{random.randint(1000, 9999)}",
             event_type="priority_updated",
             actor=actor,
             description=desc,
-            timestamp=now
+            timestamp=now,
         )
         ticket.timeline.append(event)
         return await self.repository.update(ticket)
 
     async def assign_agent(self, ticket_id: str, payload: TicketAgentAssign, actor: str) -> Ticket:
         ticket = await self.get_ticket(ticket_id)
-        
+
         old_agent = ticket.assigned_agent_id
         ticket.assigned_agent_id = payload.agent_id
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         ticket.updated_at = now
-        
+
         desc = f"Assigned to agent '{payload.agent_id}'."
         if old_agent:
             desc = f"Reassigned from '{old_agent}' to '{payload.agent_id}'."
         if payload.comment:
             desc += f" Note: {payload.comment}"
-            
+
         event = TicketTimelineEvent(
             event_id=f"EVT-{random.randint(1000, 9999)}",
             event_type="agent_assigned",
             actor=actor,
             description=desc,
-            timestamp=now
+            timestamp=now,
         )
         ticket.timeline.append(event)
         return await self.repository.update(ticket)
 
     async def add_comment(self, ticket_id: str, payload: TicketCommentCreate) -> TicketComment:
         ticket = await self.get_ticket(ticket_id)
-        now = datetime.now(timezone.utc)
-        
+        now = datetime.now(UTC)
+
         comment = TicketComment(
             comment_id=f"CMT-{random.randint(1000, 9999)}",
             author=payload.author,
             content=TicketValidator.sanitize_text(payload.content),
-            timestamp=now
+            timestamp=now,
         )
         ticket.comments.append(comment)
-        
+
         event = TicketTimelineEvent(
             event_id=f"EVT-{random.randint(1000, 9999)}",
             event_type="commented",
             actor=payload.author,
             description=f"New comment added by {payload.author}.",
-            timestamp=now
+            timestamp=now,
         )
         ticket.timeline.append(event)
         ticket.updated_at = now
@@ -196,13 +208,14 @@ class TicketService:
         await self.get_ticket(ticket_id)
         return await self.repository.delete(ticket_id)
 
-    async def get_dashboard_stats(self) -> Dict[str, Any]:
+    async def get_dashboard_stats(self) -> dict[str, Any]:
         return await self.repository.get_stats()
 
     async def list_tickets(
         self, filters: TicketFilterParams, page: int = 1, size: int = 10
-    ) -> Tuple[List[Ticket], int]:
+    ) -> tuple[list[Ticket], int]:
         return await self.repository.list_and_filter(filters, page, size)
+
 
 def get_ticket_service() -> TicketService:
     repo = get_ticket_repository()

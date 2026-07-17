@@ -1,23 +1,20 @@
 import asyncio
-from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from datetime import datetime
+
 from app.schemas.conversation import ConversationState
 from app.schemas.message import Message
 
+
 class ConversationMemory:
     def __init__(self):
-        self._conversations: Dict[str, ConversationState] = {}
+        self._conversations: dict[str, ConversationState] = {}
         self._lock = asyncio.Lock()
 
-    async def get_or_create(self, session_id: str, user_id: Optional[str] = None) -> ConversationState:
+    async def get_or_create(self, session_id: str, user_id: str | None = None) -> ConversationState:
         async with self._lock:
             if session_id not in self._conversations:
                 self._conversations[session_id] = ConversationState(
-                    session_id=session_id,
-                    user_id=user_id,
-                    messages=[],
-                    summary=None,
-                    metadata={}
+                    session_id=session_id, user_id=user_id, messages=[], summary=None, metadata={}
                 )
             return self._conversations[session_id]
 
@@ -25,12 +22,9 @@ class ConversationMemory:
         async with self._lock:
             if session_id not in self._conversations:
                 self._conversations[session_id] = ConversationState(
-                    session_id=session_id,
-                    messages=[],
-                    summary=None,
-                    metadata={}
+                    session_id=session_id, messages=[], summary=None, metadata={}
                 )
-            
+
             state = self._conversations[session_id]
             state.messages.append(message)
             state.updated_at = datetime.utcnow()
@@ -52,7 +46,9 @@ class ConversationMemory:
             if session_id in self._conversations:
                 del self._conversations[session_id]
 
+
 _conversation_memory_instance = ConversationMemory()
+
 
 def get_conversation_memory() -> ConversationMemory:
     return _conversation_memory_instance

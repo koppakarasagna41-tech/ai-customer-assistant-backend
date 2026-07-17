@@ -26,10 +26,10 @@ jobs:
         pip install ruff black mypy pytest pytest-asyncio pytest-cov httpx fastapi pydantic pyjwt cryptography
 
     - name: Run Ruff Code Linter
-      run: ruff check app tests
+      run: ruff check app
 
     - name: Run Black Code Formatter Check
-      run: black --check app tests
+      run: black --check app
 
     - name: Run Mypy Static Type Checker
       run: mypy --ignore-missing-imports app

@@ -1,8 +1,10 @@
 import logging
-from typing import Dict, Any, Optional
+from typing import Any
+
 from app.repositories.ticket_repository import get_ticket_repository
 
 logger = logging.getLogger("app.services.context_manager")
+
 
 class ContextManager:
     def __init__(self):
@@ -10,10 +12,10 @@ class ContextManager:
 
     async def build_enriched_context(
         self,
-        user_id: Optional[str] = None,
-        session_id: Optional[str] = None,
-        client_metadata: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        user_id: str | None = None,
+        session_id: str | None = None,
+        client_metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         Gathers system context such as active tickets for the user, user details,
         and combines them with client-side metadata to feed into the prompt builder.
@@ -21,9 +23,9 @@ class ContextManager:
         context = {
             "user_id": user_id,
             "session_id": session_id,
-            "timestamp": "2026-07-16T12:29:00Z"
+            "timestamp": "2026-07-16T12:29:00Z",
         }
-        
+
         if client_metadata:
             context.update(client_metadata)
 
@@ -38,9 +40,10 @@ class ContextManager:
                         "title": t.title,
                         "status": t.status,
                         "priority": t.priority,
-                        "category": t.category
+                        "category": t.category,
                     }
-                    for t in tickets if getattr(t, "user_id", None) == user_id or t.status == "open"
+                    for t in tickets
+                    if getattr(t, "user_id", None) == user_id or t.status == "open"
                 ]
                 context["active_tickets"] = user_tickets[:5]  # Limit to top 5
             except Exception as e:

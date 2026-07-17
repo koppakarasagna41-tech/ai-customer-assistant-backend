@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional
 from datetime import datetime
+
+from pydantic import BaseModel
+
 
 class RiskEvent(BaseModel):
     id: str
@@ -9,12 +10,13 @@ class RiskEvent(BaseModel):
     risk_type: str
     severity: str
     risk_score: float
-    ip_address: Optional[str] = None
-    user_id: Optional[str] = None
+    ip_address: str | None = None
+    user_id: str | None = None
+
 
 class RiskSummary(BaseModel):
     total_scanned: int
     malicious_blocked: int
     critical_alerts: int
     average_risk_score: float
-    recent_events: List[RiskEvent]
+    recent_events: list[RiskEvent]

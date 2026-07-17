@@ -1,16 +1,17 @@
 from fastapi import APIRouter
+
 from app.api.v1 import (
-    health,
+    analysis,
+    analytics,
     auth,
     chat,
-    tickets,
-    sentiment,
+    health,
     intent,
     rag,
-    analytics,
     reports,
-    analysis,
-    security
+    security,
+    sentiment,
+    tickets,
 )
 
 api_router = APIRouter()
