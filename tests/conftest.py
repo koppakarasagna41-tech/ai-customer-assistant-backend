@@ -90,8 +90,7 @@ def mock_gemini_client(monkeypatch) -> None:
         # Default mock structure returning valid JSON
         mock_response = {
             "response": (
-                "Thank you for contacting customer support. We are looking into "
-                "your query."
+                "Thank you for contacting customer support. We are looking into " "your query."
             ),
             "intent": "SUPPORT_QUERY",
             "sentiment": "neutral",

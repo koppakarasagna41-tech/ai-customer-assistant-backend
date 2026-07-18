@@ -47,8 +47,7 @@ class SecurityLogger:
 
             if not is_safe or severity in ["HIGH", "CRITICAL"]:
                 self.logger.warning(
-                    "[AI SECURITY ALERT] Severity: %s | Risk: %s | Score: %s | "
-                    "Snippet: %s",
+                    "[AI SECURITY ALERT] Severity: %s | Risk: %s | Score: %s | " "Snippet: %s",
                     severity,
                     risk_type,
                     risk_score,

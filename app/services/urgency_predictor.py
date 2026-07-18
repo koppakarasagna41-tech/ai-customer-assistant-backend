@@ -8,10 +8,7 @@ class UrgencyPredictor:
                 r"\b(production down|prod down|outage|system down|cannot login|"
                 r"critical issue|broken|crash)\b"
             ),
-            (
-                r"\b(immediately|urgent|asap|priority 1|p1|emergency|"
-                r"as soon as possible)\b"
-            ),
+            (r"\b(immediately|urgent|asap|priority 1|p1|emergency|" r"as soon as possible)\b"),
             r"\b(losing money|legal|lawsuit|furious|disaster|catastrophe)\b",
         ]
         self.medium_patterns = [

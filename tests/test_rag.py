@@ -4,8 +4,7 @@ from fastapi.testclient import TestClient
 def test_rag_index_text_success(base_client: TestClient):
     payload = {
         "content": (
-            "Enterprise AI platform provides end-to-end RAG support and "
-            "intelligent analysis."
+            "Enterprise AI platform provides end-to-end RAG support and " "intelligent analysis."
         ),
         "filename": "ai_platform_guide.txt",
     }
