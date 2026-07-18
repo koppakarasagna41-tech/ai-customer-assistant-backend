@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Any
+from typing import Any, cast
 
 from app.schemas.retrieval import RetrievedChunk
 
@@ -31,7 +31,7 @@ class RetrievalCache:
         entry = self._cache.get(cache_key)
         if entry:
             logger.info(f"Retrieval cache hit for query: '{query[:30]}...'")
-            return entry["data"]
+            return cast(list[RetrievedChunk], entry["data"])
         return None
 
     def set(self, query: str, chunks: list[RetrievedChunk], filters: dict | None = None) -> None:

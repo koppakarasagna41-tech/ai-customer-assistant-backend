@@ -15,7 +15,7 @@ class CitationBuilder:
 
     @staticmethod
     def build_citations(answer: str, retrieved_chunks: list[RetrievedChunk]) -> list[Citation]:
-        citations = []
+        citations: list[Citation] = []
         if not retrieved_chunks:
             return citations
 

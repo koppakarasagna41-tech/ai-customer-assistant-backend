@@ -56,7 +56,7 @@ class InMemoryVectorStore(VectorStore):
     def similarity_search(
         self, query_vector: list[float], top_k: int = 4, filters: dict[str, Any] | None = None
     ) -> list[dict[str, Any]]:
-        results = []
+        results: list[dict[str, Any]] = []
         embedding_service = get_embedding_service()
 
         for _chunk_id, chunk in self._store.items():
@@ -85,7 +85,7 @@ class InMemoryVectorStore(VectorStore):
             results.append({"chunk": chunk, "score": score})
 
         # Sort by score descending
-        results.sort(key=lambda x: x["score"], reverse=True)
+        results.sort(key=lambda x: float(x["score"]), reverse=True)
         return results[:top_k]
 
     def delete_document(self, document_id: str) -> None:

@@ -43,7 +43,7 @@ class ContextBuilder:
 
         # 1. Deduplicate by content
         unique_chunks = []
-        seen_texts = set()
+        seen_texts: set[str] = set()
 
         for chunk in chunks:
             normalized_text = " ".join(chunk.content.strip().lower().split())

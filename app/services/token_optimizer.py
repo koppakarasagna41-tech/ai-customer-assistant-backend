@@ -28,7 +28,7 @@ class TokenOptimizer:
         Always keeps system instructions or first message if crucial,
         but for chat context, we retain the most recent messages.
         """
-        optimized = []
+        optimized: list[Message] = []
         total_tokens = 0
         seen_contents = set()
 

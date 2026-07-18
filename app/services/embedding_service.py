@@ -4,6 +4,7 @@ import math
 import os
 import urllib.error
 import urllib.request
+from typing import cast
 
 logger = logging.getLogger("app.services.embedding_service")
 
@@ -34,7 +35,7 @@ class EmbeddingService:
                 with urllib.request.urlopen(req, timeout=10) as response:
                     res_data = json.loads(response.read().decode("utf-8"))
                     embedding = res_data["embedding"]["values"]
-                    return embedding
+                    return cast(list[float], embedding)
             except Exception as e:
                 logger.warning(
                     "Failed to fetch Gemini Embedding: %s. Falling back to local semantic encoder.",

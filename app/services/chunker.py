@@ -20,7 +20,7 @@ class DocumentChunker:
         if total_words == 0:
             return []
 
-        chunks = []
+        chunks: list[Chunk] = []
         chunk_index = 0
 
         start = 0
@@ -49,6 +49,7 @@ class DocumentChunker:
                     index=chunk_index,
                     content=chunk_text,
                     metadata=metadata,
+                    embedding=None,
                 )
             )
 
@@ -74,8 +75,8 @@ class DocumentChunker:
         # Split by periods, question marks, exclamation marks followed by whitespace
         sentences = re.split(r"(?<=[.!?])\s+", content)
 
-        chunks = []
-        current_chunk_sentences = []
+        chunks: list[Chunk] = []
+        current_chunk_sentences: list[str] = []
         current_length = 0
         chunk_index = 0
 
@@ -106,6 +107,7 @@ class DocumentChunker:
                         index=chunk_index,
                         content=chunk_text,
                         metadata=metadata,
+                        embedding=None,
                     )
                 )
 
@@ -113,7 +115,7 @@ class DocumentChunker:
 
                 # Overlap logic: keep some of the last sentences
                 overlap_length = 0
-                overlap_sentences = []
+                overlap_sentences: list[str] = []
                 for s in reversed(current_chunk_sentences):
                     if overlap_length + len(s) < chunk_overlap:
                         overlap_sentences.insert(0, s)
@@ -145,8 +147,9 @@ class DocumentChunker:
                     id=chunk_id,
                     document_id=document.id,
                     index=chunk_index,
-                    content=chunk_text,
-                    metadata=metadata,
+                content=chunk_text,
+                metadata=metadata,
+                embedding=None,
                 )
             )
 

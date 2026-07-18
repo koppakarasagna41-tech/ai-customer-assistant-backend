@@ -46,8 +46,9 @@ allowed_origins = [
     "https://vercel.com",
 ]
 # Support dynamic frontend URL if specified in environment
-if os.getenv("FRONTEND_URL"):
-    allowed_origins.append(os.getenv("FRONTEND_URL"))
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    allowed_origins.append(frontend_url)
 
 app.add_middleware(
     CORSMiddleware,

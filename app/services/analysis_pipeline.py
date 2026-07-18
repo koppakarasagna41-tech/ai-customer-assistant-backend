@@ -1,6 +1,12 @@
 import asyncio
 import logging
-from typing import Any
+from typing import Any, cast
+
+from app.schemas.classification import ClassificationResponse
+from app.schemas.entities import ExtractedEntities
+from app.schemas.escalation import EscalationResponse
+from app.schemas.intent import IntentResponse
+from app.schemas.sentiment import SentimentResponse
 
 from app.services.analysis_cache import AnalysisCache, get_analysis_cache
 from app.services.classification_service import ClassificationService, get_classification_service
@@ -127,6 +133,14 @@ class AnalysisPipeline:
             escalation_res = EscalationResponse(
                 escalation_score=0.0, escalation_recommended=False, reasons=[]
             )
+
+        # ``gather(return_exceptions=True)`` returns exception unions.  The
+        # fallback branches above guarantee concrete responses from this point.
+        entities_res = cast(ExtractedEntities, entities_res)
+        intent_res = cast(IntentResponse, intent_res)
+        classification_res = cast(ClassificationResponse, classification_res)
+        sentiment_res = cast(SentimentResponse, sentiment_res)
+        escalation_res = cast(EscalationResponse, escalation_res)
 
         # Extract primary values for downstream reasoning
         primary_intent = intent_res.intents[0] if intent_res.intents else None

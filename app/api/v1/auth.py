@@ -24,7 +24,7 @@ async def register(payload: UserCreate, service: AuthService = Depends(get_auth_
         return BaseResponse(
             success=True,
             message="User registered successfully",
-            data=UserResponse.from_attributes(user),
+            data=UserResponse.from_orm(user),
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
@@ -82,5 +82,5 @@ async def get_me(current_user: User = Depends(get_current_user)):
     return BaseResponse(
         success=True,
         message="Current user profile retrieved",
-        data=UserResponse.from_attributes(current_user),
+        data=UserResponse.from_orm(current_user),
     )

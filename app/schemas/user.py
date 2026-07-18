@@ -26,4 +26,4 @@ class UserResponse(UserBase):
     permissions: list[str]
 
     class Config:
-        from_attributes = True
+        orm_mode = True

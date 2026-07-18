@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import cast
 
 from app.schemas.analytics import AnalyticsFilter, DateRange, GeneralAnalytics
 from app.schemas.chart import ChartData, ChartDataItem
@@ -32,7 +33,7 @@ class DashboardService:
 
         cached_dashboard = self.cache_service.get(cache_key)
         if cached_dashboard:
-            return cached_dashboard
+            return cast(DashboardOverview, cached_dashboard)
 
         # Load metrics & KPIs
         kpis = self.kpi_service.get_kpi_overview()

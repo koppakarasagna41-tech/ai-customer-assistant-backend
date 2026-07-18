@@ -61,7 +61,7 @@ async def search_rag(
 ):
     try:
         retrieval_res = await retriever.retrieve(
-            query=payload.query, top_k=payload.top_k, filters=payload.filter
+            query=payload.query, top_k=payload.top_k or 4, filters=payload.filter
         )
 
         results = [
@@ -106,8 +106,8 @@ async def query_rag(payload: RagQueryRequest, rag_service: RAGService = Depends(
         response = await rag_service.answer_question(
             query=payload.query,
             filters=payload.filter,
-            top_k=payload.top_k,
-            compress=payload.compress,
+            top_k=payload.top_k or 4,
+            compress=True if payload.compress is None else payload.compress,
         )
         return BaseResponse(success=True, message="RAG query complete", data=response)
     except Exception as e:

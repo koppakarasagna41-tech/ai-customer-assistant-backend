@@ -19,6 +19,10 @@ class DocumentMetadata(BaseModel):
 class Document(BaseModel):
     id: str = Field(..., description="Unique document identifier")
     content: str = Field(..., description="Raw text content of the document")
-    metadata: DocumentMetadata = Field(default_factory=DocumentMetadata)
+    metadata: DocumentMetadata = Field(
+        default_factory=lambda: DocumentMetadata(
+            title=None, source=None, author=None, category=None, product=None
+        )
+    )
     mime_type: str = Field("text/plain", description="MIME type of the source file")
     chunk_count: int = Field(0, description="Number of generated chunks")

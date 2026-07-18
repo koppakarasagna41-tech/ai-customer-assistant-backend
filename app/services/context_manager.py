@@ -20,7 +20,7 @@ class ContextManager:
         Gathers system context such as active tickets for the user, user details,
         and combines them with client-side metadata to feed into the prompt builder.
         """
-        context = {
+        context: dict[str, Any] = {
             "user_id": user_id,
             "session_id": session_id,
             "timestamp": "2026-07-16T12:29:00Z",

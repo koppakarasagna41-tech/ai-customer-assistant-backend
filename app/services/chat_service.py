@@ -150,7 +150,7 @@ class ChatService:
             try:
                 recent_msgs = [{"role": m.role, "content": m.content} for m in state.messages[-10:]]
                 summary_prompt = self.prompt_builder.build_summary_prompt(
-                    state.summary, recent_msgs
+                    state.summary or "", recent_msgs
                 )
                 summary_contents = [{"role": "user", "parts": [{"text": summary_prompt}]}]
 

@@ -184,7 +184,7 @@ class TicketRepository:
         async with self._lock:
             tickets = list(self._tickets.values())
 
-            stats = {
+            stats: dict[str, Any] = {
                 "total_count": len(tickets),
                 "open_count": sum(1 for t in tickets if t.status == "open"),
                 "in_progress_count": sum(1 for t in tickets if t.status == "in_progress"),

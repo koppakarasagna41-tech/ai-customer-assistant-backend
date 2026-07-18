@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import cast
 
 from app.services.gemini_client import get_gemini_client
 
@@ -49,7 +50,7 @@ class QueryRewriter:
                 temperature=0.1,
                 max_output_tokens=100,
             )
-            rewritten = res["candidates"][0]["content"]["parts"][0]["text"].strip()
+            rewritten = cast(str, res["candidates"][0]["content"]["parts"][0]["text"].strip())
             # Safety fallback: if rewritten is empty or error, use cleaned
             if rewritten:
                 logger.info(f"Query rewritten: '{query}' -> '{rewritten}'")

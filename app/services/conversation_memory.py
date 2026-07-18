@@ -22,7 +22,7 @@ class ConversationMemory:
         async with self._lock:
             if session_id not in self._conversations:
                 self._conversations[session_id] = ConversationState(
-                    session_id=session_id, messages=[], summary=None, metadata={}
+                    session_id=session_id, user_id=None, messages=[], summary=None, metadata={}
                 )
 
             state = self._conversations[session_id]

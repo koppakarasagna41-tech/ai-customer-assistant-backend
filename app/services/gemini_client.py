@@ -5,6 +5,7 @@ import logging
 import os
 import urllib.error
 import urllib.request
+from typing import Any, cast
 
 logger = logging.getLogger("app.services.gemini_client")
 
@@ -20,7 +21,7 @@ class GeminiClient:
     @staticmethod
     def _perform_request(request: urllib.request.Request) -> str:
         with urllib.request.urlopen(request, timeout=30) as response:
-            return response.read().decode("utf-8")
+            return cast(str, response.read().decode("utf-8"))
 
     async def generate_content(
         self,
@@ -30,7 +31,7 @@ class GeminiClient:
         temperature: float = 0.2,
         max_output_tokens: int = 1500,
         response_mime_type: str = "text/plain",
-    ) -> dict:
+    ) -> dict[str, Any]:
         """
         Calls Gemini API using standard library urllib asynchronously.
         Supports system instruction, response schema, and JSON mode.
@@ -38,7 +39,7 @@ class GeminiClient:
         url = f"{self.base_url}/{self.model_name}:generateContent?key={self.api_key}"
 
         # Build payload
-        payload = {
+        payload: dict[str, Any] = {
             "contents": contents,
             "generationConfig": {
                 "temperature": temperature,
@@ -68,7 +69,7 @@ class GeminiClient:
                 )
 
                 response_body = await loop.run_in_executor(None, self._perform_request, req)
-                return json.loads(response_body)
+                return cast(dict[str, Any], json.loads(response_body))
 
             except urllib.error.HTTPError as e:
                 error_body = ""

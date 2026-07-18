@@ -12,7 +12,7 @@ class PromptBuilder:
             os.path.dirname(os.path.dirname(__file__)), "prompts"
         )
         self._system_prompt = ""
-        self._fewshot_examples = []
+        self._fewshot_examples: list[dict[str, Any]] = []
         self._reflection_prompt = ""
         self._security_prompt = ""
         self._load_prompts()

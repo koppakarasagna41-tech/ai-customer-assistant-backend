@@ -26,7 +26,7 @@ new_paths = [
     "/app/applet/app/routers/rag.py",
 ]
 
-res = {"modified_files": [], "new_files": []}
+res: dict[str, list[dict[str, str]]] = {"modified_files": [], "new_files": []}
 
 for path in modified_paths:
     with open(path) as f:

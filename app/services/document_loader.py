@@ -207,6 +207,7 @@ class DocumentLoader:
             source=meta_dict.get("source"),
             category=meta_dict.get("category", "general"),
             product=meta_dict.get("product"),
+            author=meta_dict.get("author"),
             custom_metadata={
                 k: v
                 for k, v in meta_dict.items()

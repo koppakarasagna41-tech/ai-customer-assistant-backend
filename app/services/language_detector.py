@@ -25,7 +25,7 @@ class LanguageDetector:
             if matches:
                 scores[lang] = len(matches)
 
-        detected = max(scores, key=scores.get)
+        detected = max(scores, key=lambda language: scores[language])
         return detected
 
 
