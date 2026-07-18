@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth_dependencies import get_current_user
 from app.models.user import User
 from app.schemas.auth import LoginCredentials, RefreshTokenRequest
 from app.schemas.response import BaseResponse
