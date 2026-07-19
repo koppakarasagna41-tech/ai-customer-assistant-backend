@@ -159,13 +159,13 @@ class TicketService:
         ticket = await self.get_ticket(ticket_id)
 
         old_agent = ticket.assigned_agent_id
-        ticket.assigned_agent_id = payload.agent_id
+        ticket.assigned_agent_id = payload.assigned_agent_id
         now = datetime.now(UTC)
         ticket.updated_at = now
 
-        desc = f"Assigned to agent '{payload.agent_id}'."
+        desc = f"Assigned to agent '{payload.assigned_agent_id}'."
         if old_agent:
-            desc = f"Reassigned from '{old_agent}' to '{payload.agent_id}'."
+            desc = f"Reassigned from '{old_agent}' to '{payload.assigned_agent_id}'."
         if payload.comment:
             desc += f" Note: {payload.comment}"
 

@@ -27,7 +27,7 @@ class TicketPriorityUpdate(BaseModel):
 
 
 class TicketAgentAssign(BaseModel):
-    agent_id: str = Field(..., description="ID of the agent being assigned")
+    assigned_agent_id: str = Field(..., description="ID of the agent being assigned")
     comment: str | None = Field(None, description="Optional comment regarding the assignment")
 
 

@@ -215,4 +215,11 @@ class DocumentLoader:
             },
         )
 
-        return Document(id=doc_id, content=text, metadata=metadata, mime_type=mime, chunk_count=0)
+        return Document(
+    document_id=doc_id,
+    title=metadata.title or filename,
+    content=text,
+    metadata=metadata,
+    mime_type=mime,
+    chunk_count=0,
+)

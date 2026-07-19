@@ -29,7 +29,7 @@ class DocumentChunker:
             chunk_words = words[start:end]
             chunk_text = " ".join(chunk_words)
 
-            chunk_id = f"{document.id}-CH-{chunk_index:03d}"
+            chunk_id = f"{document.document_id}-CH-{chunk_index:03d}"
 
             # Formulate metadata dictionary
             metadata = {
@@ -45,7 +45,7 @@ class DocumentChunker:
             chunks.append(
                 Chunk(
                     id=chunk_id,
-                    document_id=document.id,
+                    document_id=document.document_id,
                     index=chunk_index,
                     content=chunk_text,
                     metadata=metadata,
@@ -88,7 +88,7 @@ class DocumentChunker:
             # If a single sentence exceeds size, add what we have, then add this sentence
             if current_length + sentence_len > chunk_size and current_chunk_sentences:
                 chunk_text = " ".join(current_chunk_sentences)
-                chunk_id = f"{document.id}-CH-{chunk_index:03d}"
+                chunk_id = f"{document.document_id}-CH-{chunk_index:03d}"
 
                 metadata = {
                     "title": document.metadata.title,
@@ -103,7 +103,7 @@ class DocumentChunker:
                 chunks.append(
                     Chunk(
                         id=chunk_id,
-                        document_id=document.id,
+                        document_id=document.document_id,
                         index=chunk_index,
                         content=chunk_text,
                         metadata=metadata,
@@ -131,7 +131,7 @@ class DocumentChunker:
         # Add remaining text
         if current_chunk_sentences:
             chunk_text = " ".join(current_chunk_sentences)
-            chunk_id = f"{document.id}-CH-{chunk_index:03d}"
+            chunk_id = f"{document.document_id}-CH-{chunk_index:03d}"
             metadata = {
                 "title": document.metadata.title,
                 "source": document.metadata.source,
@@ -145,7 +145,7 @@ class DocumentChunker:
             chunks.append(
                 Chunk(
                     id=chunk_id,
-                    document_id=document.id,
+                    document_id=document.document_id,
                     index=chunk_index,
                     content=chunk_text,
                     metadata=metadata,

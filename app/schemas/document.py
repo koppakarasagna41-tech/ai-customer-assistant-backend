@@ -12,17 +12,24 @@ class DocumentMetadata(BaseModel):
     product: str | None = Field(None, description="Product associated with the document")
     created_at: datetime | None = Field(default_factory=datetime.utcnow)
     custom_metadata: dict[str, Any] = Field(
-        default_factory=dict, description="Any other custom metadata keys"
+        default_factory=dict,
+        description="Any other custom metadata keys",
     )
 
 
 class Document(BaseModel):
-    id: str = Field(..., description="Unique document identifier")
-    content: str = Field(..., description="Raw text content of the document")
+    document_id: str = Field(..., description="Unique document identifier")
+    title: str = Field(..., description="Document title")
+    content: str = Field(..., description="Raw text content")
     metadata: DocumentMetadata = Field(
         default_factory=lambda: DocumentMetadata(
-            title=None, source=None, author=None, category=None, product=None
+            title=None,
+            source=None,
+            author=None,
+            category=None,
+            product=None,
         )
     )
-    mime_type: str = Field("text/plain", description="MIME type of the source file")
+    mime_type: str = Field("text/plain", description="MIME type")
     chunk_count: int = Field(0, description="Number of generated chunks")
+    

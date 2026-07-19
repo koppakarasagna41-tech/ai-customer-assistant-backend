@@ -86,6 +86,10 @@ def test_update_priority(base_client: TestClient):
 def test_assign_agent(base_client: TestClient):
     payload = {"assigned_agent_id": "AGT-999"}
     response = base_client.post("/api/v1/tickets/TCK-10001/assign", json=payload)
+
+    print(response.status_code)
+    print(response.json())
+
     assert response.status_code == 200
     assert response.json()["data"]["assigned_agent_id"] == "AGT-999"
 

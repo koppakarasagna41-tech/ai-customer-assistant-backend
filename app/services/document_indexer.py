@@ -48,10 +48,10 @@ class DocumentIndexer:
 
         # 5. Register document
         document.chunk_count = len(chunks)
-        self._document_registry[document.id] = document
+        self._document_registry[document.document_id] = document
 
         logger.info(
-            f"Successfully indexed document {document.id} ({filename}) with {len(chunks)} chunks."
+            f"Successfully indexed document {document.document_id} ({filename}) with {len(chunks)} chunks."
         )
         return document
 

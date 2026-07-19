@@ -59,8 +59,8 @@ class SecurityLogger:
             critical_count = sum(1 for e in self._events if e["severity"] == "CRITICAL")
             avg_score = sum(e["risk_score"] for e in self._events) / max(1, len(self._events))
             return {
-                "total_scanned": self._total_scanned,
-                "malicious_blocked": self._blocked_count,
+                "total_scans": self._total_scanned,
+                "blocked_queries": self._blocked_count,
                 "critical_alerts": critical_count,
                 "average_risk_score": round(avg_score, 3),
                 "recent_events": [dict(e) for e in reversed(self._events)],

@@ -48,8 +48,9 @@ class SecurityService:
                 )
             )
         return RiskSummary(
-            total_scanned=log_summary["total_scanned"],
-            malicious_blocked=log_summary["malicious_blocked"],
+            total_scans=log_summary["total_scans"],
+            blocked_queries=log_summary["blocked_queries"],
+            risk_distributions={},
             critical_alerts=log_summary["critical_alerts"],
             average_risk_score=log_summary["average_risk_score"],
             recent_events=recent_events,

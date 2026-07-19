@@ -97,6 +97,11 @@ class DashboardService:
             filters=filters,
             kpis=kpis,
             metrics=metrics,
+            token_usage={
+                 "prompt_tokens": 0,
+                 "completion_tokens": 0,
+                 "total_tokens": 0,
+             },
             charts=charts,
             last_updated=datetime.utcnow().isoformat() + "Z",
         )
