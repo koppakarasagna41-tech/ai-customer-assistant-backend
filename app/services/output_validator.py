@@ -51,7 +51,8 @@ class OutputValidator:
                 suggested_actions=[
                     str(action)
                     for action in data.get(
-                        "suggested_actions", ["Get support", "View tickets"]
+                        "suggested_actions",
+                        ["Get support", "View tickets"],
                     )
                 ],
             )
