@@ -147,9 +147,9 @@ class DocumentChunker:
                     id=chunk_id,
                     document_id=document.id,
                     index=chunk_index,
-                content=chunk_text,
-                metadata=metadata,
-                embedding=None,
+                    content=chunk_text,
+                    metadata=metadata,
+                    embedding=None,
                 )
             )
 

@@ -2,12 +2,6 @@ import asyncio
 import logging
 from typing import Any, cast
 
-from app.schemas.classification import ClassificationResponse
-from app.schemas.entities import ExtractedEntities
-from app.schemas.escalation import EscalationResponse
-from app.schemas.intent import IntentResponse
-from app.schemas.sentiment import SentimentResponse
-
 from app.services.analysis_cache import AnalysisCache, get_analysis_cache
 from app.services.classification_service import ClassificationService, get_classification_service
 from app.services.confidence_service import ConfidenceService, get_confidence_service
