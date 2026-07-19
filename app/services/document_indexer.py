@@ -51,7 +51,9 @@ class DocumentIndexer:
         self._document_registry[document.document_id] = document
 
         logger.info(
-            f"Successfully indexed document {document.document_id} ({filename}) with {len(chunks)} chunks."
+            f"Successfully indexed document "
+            f"{document.document_id} ({filename}) "
+            f"with {len(chunks)} chunks."
         )
         return document
 

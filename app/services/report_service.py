@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from app.schemas.report import (
     ReportMetadata,
@@ -65,7 +65,7 @@ class ReportService:
         )
 
         return ReportMetadata(
-           report_id="REP_" + uuid.uuid4().hex[:8],
+            report_id="REP_" + uuid.uuid4().hex[:8],
             title=request.report_type,
             format=request.format,
             size_bytes=export_res.size_bytes,
@@ -82,9 +82,7 @@ class ReportService:
         config: ScheduledReportConfig,
     ):
 
-        config.schedule_id = config.schedule_id or (
-            "SCH_" + uuid.uuid4().hex[:8]
-        )
+        config.schedule_id = config.schedule_id or ("SCH_" + uuid.uuid4().hex[:8])
 
         self._schedules.append(config)
 
@@ -108,4 +106,4 @@ _global_report_service = ReportService()
 
 
 def get_report_service() -> ReportService:
- return _global_report_service
+    return _global_report_service

@@ -6,21 +6,13 @@ from app.schemas.kpi import KPIOverview
 
 
 class DashboardOverview(BaseModel):
-    date_range: DateRange = Field(
-        ..., description="The time range of data in the dashboard"
-    )
+    date_range: DateRange = Field(..., description="The time range of data in the dashboard")
 
-    filters: AnalyticsFilter = Field(
-        ..., description="Applied search and analytics filters"
-    )
+    filters: AnalyticsFilter = Field(..., description="Applied search and analytics filters")
 
-    kpis: KPIOverview = Field(
-        ..., description="Key Performance Indicators overview"
-    )
+    kpis: KPIOverview = Field(..., description="Key Performance Indicators overview")
 
-    metrics: GeneralAnalytics = Field(
-        ..., description="General metrics block"
-    )
+    metrics: GeneralAnalytics = Field(..., description="General metrics block")
 
     # ✅ ADD THIS FIELD
     token_usage: dict = Field(
@@ -32,6 +24,4 @@ class DashboardOverview(BaseModel):
         ..., description="Charts metadata and timeseries data for visual presentation"
     )
 
-    last_updated: str = Field(
-        ..., description="Timestamp of when this dashboard was computed"
-    )
+    last_updated: str = Field(..., description="Timestamp of when this dashboard was computed")

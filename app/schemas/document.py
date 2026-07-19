@@ -32,4 +32,3 @@ class Document(BaseModel):
     )
     mime_type: str = Field("text/plain", description="MIME type")
     chunk_count: int = Field(0, description="Number of generated chunks")
-    
