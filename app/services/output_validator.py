@@ -37,13 +37,24 @@ class OutputValidator:
             if not isinstance(data, dict):
                 raise ValueError("Model response must be a JSON object")
             return StructuredAIResponse(
-                response=str(data.get("response", "Thank you for reaching out. How can I assist you today?")),
+                response=str(
+    data.get(
+        "response",
+        "Thank you for reaching out. How can I assist you today?",
+    )
+),
                 intent=str(data.get("intent", "general_inquiry")),
                 sentiment=str(data.get("sentiment", "neutral")),
                 category=str(data.get("category", "general")),
                 urgency=str(data.get("urgency", "medium")),
                 entities=dict(data.get("entities", {})),
-                suggested_actions=[str(action) for action in data.get("suggested_actions", ["Get support", "View tickets"])],
+                suggested_actions=[
+    str(action)
+    for action in data.get(
+        "suggested_actions",
+        ["Get support", "View tickets"],
+    )
+],
             )
         except Exception as e:
             logger.error(f"Validation failed for raw output: {raw_output}. Error: {e}")
