@@ -4,8 +4,11 @@ from typing import Any
 
 import jwt
 
-# Reuse configuration or environment variables
-JWT_SECRET = os.getenv("JWT_SECRET", "super-secret-enterprise-key-for-jwt-tokens-123456")
+# Load configuration from environment variables
+JWT_SECRET = os.getenv("JWT_SECRET")
+if not JWT_SECRET:
+    raise ValueError("JWT_SECRET environment variable is required and cannot be empty.")
+
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))

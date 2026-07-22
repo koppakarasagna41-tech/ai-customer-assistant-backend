@@ -17,6 +17,15 @@ class UserCreate(UserBase):
     )
 
 
+class UserUpdate(BaseModel):
+    username: str | None = Field(None, min_length=3, max_length=50)
+    email: str | None = Field(None, description="User email address")
+    full_name: str | None = Field(None, min_length=1, max_length=100)
+    role: str | None = Field(None, description="User role")
+    is_active: bool | None = None
+    permissions: list[str] | None = None
+
+
 class UserResponse(UserBase):
     user_id: str
     role: str

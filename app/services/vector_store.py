@@ -98,14 +98,18 @@ class InMemoryVectorStore(VectorStore):
 # Factory/Registry to support Chroma, Pinecone, FAISS, Qdrant, Milvus
 class VectorStoreFactory:
     _instance: VectorStore | None = None
-    _provider: str = "in_memory"
+    _provider: str = "postgres"
 
     @classmethod
     def get_vector_store(cls) -> VectorStore:
         if cls._instance is None:
             # We default to in_memory in this workspace, but the abstraction
             # supports switching providers.
-            if cls._provider == "in_memory":
+            if cls._provider == "postgres":
+                from app.services.postgres_vector_store import PostgresVectorStore
+                logger.info("Initializing PostgreSQL Vector Store...")
+                cls._instance = PostgresVectorStore()
+            elif cls._provider == "in_memory":
                 cls._instance = InMemoryVectorStore()
             elif cls._provider == "chroma":
                 logger.info("Initializing ChromaDB connection...")

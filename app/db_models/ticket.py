@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import Column, DateTime, String, Text
+from sqlalchemy.orm import relationship
 
 from app.database.database import Base
 
@@ -22,3 +23,15 @@ class Ticket(Base):
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow)
+
+    comments = relationship(
+        "TicketComment",
+        back_populates="ticket",
+        cascade="all, delete-orphan",
+    )
+
+    timeline = relationship(
+        "TicketTimeline",
+        back_populates="ticket",
+        cascade="all, delete-orphan",
+    )

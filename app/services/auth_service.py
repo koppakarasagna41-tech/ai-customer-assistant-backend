@@ -1,19 +1,33 @@
 import random
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
+from app.models.refresh_token import RefreshToken as RefreshTokenModel
 from app.models.user import User, UserInDB
+from app.repositories.refresh_token_repository import (
+    RefreshTokenRepository,
+    get_refresh_token_repository,
+)
 from app.repositories.user_repository import UserRepository, get_user_repository
 from app.schemas.auth import LoginCredentials
 from app.schemas.token import Token
 from app.schemas.user import UserCreate
-from app.security.jwt import ACCESS_TOKEN_EXPIRE_MINUTES, JWTManager
+from app.security.jwt import (
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    REFRESH_TOKEN_EXPIRE_DAYS,
+    JWTManager,
+)
 from app.security.password import PasswordHasher
 from app.security.permissions import ROLE_PERMISSIONS
 
 
 class AuthService:
-    def __init__(self, repository: UserRepository):
+    def __init__(
+        self,
+        repository: UserRepository,
+        refresh_token_repository: RefreshTokenRepository,
+    ):
         self.repository = repository
+        self.refresh_token_repository = refresh_token_repository
 
     def _generate_user_id(self) -> str:
         num = random.randint(10000, 99999)
@@ -81,6 +95,16 @@ class AuthService:
         access_token = JWTManager.create_access_token(token_data)
         refresh_token = JWTManager.create_refresh_token(token_data)
 
+        # Store refresh token in database for rotation tracking
+        expires_at = datetime.now(UTC) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+        refresh_token_model = RefreshTokenModel(
+            user_id=user.user_id,
+            refresh_token=refresh_token,
+            expires_at=expires_at,
+            is_revoked=False,
+        )
+        await self.refresh_token_repository.create(refresh_token_model)
+
         return Token(
             access_token=access_token,
             refresh_token=refresh_token,
@@ -89,6 +113,18 @@ class AuthService:
         )
 
     async def refresh_token(self, refresh_token: str) -> Token:
+        # Check if token exists and is not revoked
+        stored_token = await self.refresh_token_repository.get_by_token(refresh_token)
+        if not stored_token or stored_token.is_revoked:
+            raise ValueError("Refresh token is invalid or has been revoked.")
+
+        # Check if token is expired
+        expires_at = stored_token.expires_at
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=UTC)
+        if expires_at < datetime.now(UTC):
+            raise ValueError("Refresh token has expired.")
+
         try:
             payload = JWTManager.decode_token(refresh_token)
         except ValueError as exc:
@@ -110,6 +146,18 @@ class AuthService:
         access_token = JWTManager.create_access_token(token_data)
         new_refresh_token = JWTManager.create_refresh_token(token_data)
 
+        # Revoke old refresh token and store new one
+        await self.refresh_token_repository.revoke(refresh_token)
+        
+        expires_at = datetime.now(UTC) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+        new_refresh_token_model = RefreshTokenModel(
+            user_id=user.user_id,
+            refresh_token=new_refresh_token,
+            expires_at=expires_at,
+            is_revoked=False,
+        )
+        await self.refresh_token_repository.create(new_refresh_token_model)
+
         return Token(
             access_token=access_token,
             refresh_token=new_refresh_token,
@@ -119,5 +167,6 @@ class AuthService:
 
 
 def get_auth_service() -> AuthService:
-    repo = get_user_repository()
-    return AuthService(repository=repo)
+    user_repo = get_user_repository()
+    refresh_token_repo = get_refresh_token_repository()
+    return AuthService(repository=user_repo, refresh_token_repository=refresh_token_repo)

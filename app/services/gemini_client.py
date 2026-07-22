@@ -3,20 +3,96 @@ import contextlib
 import json
 import logging
 import os
+import time
 import urllib.error
 import urllib.request
+from enum import Enum
 from typing import Any, cast
 
 logger = logging.getLogger("app.services.gemini_client")
 
 
+class CircuitBreakerState(str, Enum):
+    """States for the circuit breaker pattern."""
+    CLOSED = "closed"  # Normal operation
+    OPEN = "open"  # Reject requests
+    HALF_OPEN = "half_open"  # Allow single request to test recovery
+
+
+class CircuitBreaker:
+    """Circuit breaker to prevent cascading failures."""
+    
+    def __init__(
+        self,
+        failure_threshold: int = 5,
+        recovery_timeout: int = 60,
+        expected_exception: type = Exception,
+    ):
+        self.failure_threshold = failure_threshold
+        self.recovery_timeout = recovery_timeout
+        self.expected_exception = expected_exception
+        self.failure_count = 0
+        self.last_failure_time = None
+        self.state = CircuitBreakerState.CLOSED
+
+    def call(self, func: callable, *args: Any, **kwargs: Any) -> Any:
+        """Execute function through circuit breaker."""
+        if self.state == CircuitBreakerState.OPEN:
+            if self._should_attempt_reset():
+                self.state = CircuitBreakerState.HALF_OPEN
+            else:
+                raise RuntimeError(
+                    f"Circuit breaker is OPEN. Retry after {self.recovery_timeout}s."
+                )
+
+        try:
+            result = func(*args, **kwargs)
+            self._on_success()
+            return result
+        except self.expected_exception as e:
+            self._on_failure()
+            raise
+
+    def _should_attempt_reset(self) -> bool:
+        """Check if enough time has passed to attempt recovery."""
+        return (
+            self.last_failure_time is not None
+            and time.time() - self.last_failure_time >= self.recovery_timeout
+        )
+
+    def _on_success(self) -> None:
+        """Reset failure count on success."""
+        self.failure_count = 0
+        self.state = CircuitBreakerState.CLOSED
+
+    def _on_failure(self) -> None:
+        """Increment failure count and open circuit if threshold reached."""
+        self.failure_count += 1
+        self.last_failure_time = time.time()
+        if self.failure_count >= self.failure_threshold:
+            self.state = CircuitBreakerState.OPEN
+            logger.warning(
+                "Circuit breaker opened after %d failures", self.failure_count
+            )
+
+
 class GeminiClient:
-    def __init__(self, api_key: str | None = None, model_name: str = "gemini-2.5-flash"):
+    def __init__(
+        self,
+        api_key: str | None = None,
+        model_name: str = "gemini-flash-latest",
+    ):
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY is not configured in the environment.")
         self.model_name = model_name
         self.base_url = "https://generativelanguage.googleapis.com/v1beta/models"
+        # Initialize circuit breaker for API calls
+        self.circuit_breaker = CircuitBreaker(
+            failure_threshold=5,
+            recovery_timeout=60,
+            expected_exception=Exception,
+        )
 
     @staticmethod
     def _perform_request(request: urllib.request.Request) -> str:
@@ -35,7 +111,13 @@ class GeminiClient:
         """
         Calls Gemini API using standard library urllib asynchronously.
         Supports system instruction, response schema, and JSON mode.
+        Uses circuit breaker pattern to prevent cascading failures.
         """
+        if self.circuit_breaker.state == CircuitBreakerState.OPEN:
+            raise RuntimeError(
+                "Gemini API circuit breaker is OPEN. Service temporarily unavailable."
+            )
+
         url = f"{self.base_url}/{self.model_name}:generateContent?key={self.api_key}"
 
         # Build payload
@@ -69,7 +151,32 @@ class GeminiClient:
                 )
 
                 response_body = await loop.run_in_executor(None, self._perform_request, req)
-                return cast(dict[str, Any], json.loads(response_body))
+                
+                # Parse JSON response with error handling
+                try:
+                    response_data = json.loads(response_body)
+                except json.JSONDecodeError as e:
+                    logger.error(
+                        "Invalid JSON in Gemini API response (Attempt %s/%s): %s. Response: %s",
+                        attempt + 1,
+                        max_retries,
+                        e,
+                        response_body[:200],
+                    )
+                    if attempt == max_retries - 1:
+                        self.circuit_breaker._on_failure()
+                        raise ValueError(
+                            f"Gemini API returned invalid JSON: {e!s}"
+                        ) from e
+                    await asyncio.sleep(backoff)
+                    backoff *= 2
+                    continue
+
+                # Reset circuit breaker on success
+                if self.circuit_breaker.state == CircuitBreakerState.HALF_OPEN:
+                    self.circuit_breaker._on_success()
+                
+                return cast(dict[str, Any], response_data)
 
             except urllib.error.HTTPError as e:
                 error_body = ""
@@ -81,11 +188,12 @@ class GeminiClient:
                     max_retries,
                     e.code,
                     e.reason,
-                    error_body,
+                    error_body[:200],
                 )
                 if attempt == max_retries - 1:
+                    self.circuit_breaker._on_failure()
                     raise ValueError(
-                        f"Gemini API returned error: {e.code} - {e.reason}. Body: {error_body}"
+                        f"Gemini API returned error: {e.code} - {e.reason}. Body: {error_body[:500]}"
                     ) from e
                 await asyncio.sleep(backoff)
                 backoff *= 2
@@ -98,6 +206,7 @@ class GeminiClient:
                     e,
                 )
                 if attempt == max_retries - 1:
+                    self.circuit_breaker._on_failure()
                     raise ValueError(f"Failed to communicate with Gemini API: {e!s}") from e
                 await asyncio.sleep(backoff)
                 backoff *= 2

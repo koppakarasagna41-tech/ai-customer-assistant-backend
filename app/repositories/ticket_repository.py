@@ -2,212 +2,390 @@ import asyncio
 from datetime import UTC, datetime
 from typing import Any
 
+from sqlalchemy import or_
+from sqlalchemy.orm import Session
+
+from app.database.database import SessionLocal
+from app.db_models.ticket import Ticket as DBTicket
+from app.db_models.ticket_comment import TicketComment as DBTicketComment
+from app.db_models.ticket_timeline import TicketTimeline as DBTicketTimeline
 from app.models.ticket import Ticket, TicketComment, TicketTimelineEvent
-from app.schemas.filter import SortOrder, TicketFilterParams
+from app.schemas.filter import TicketFilterParams
 
 
 class TicketRepository:
     def __init__(self):
-        self._tickets: dict[str, Ticket] = {}
+        self.db: Session = SessionLocal()
         self._lock = asyncio.Lock()
+        self._tickets: dict[str, Ticket] = {}
         self._seed_data()
 
-    def _seed_data(self):
-        # Seed some enterprise tickets for testing
+    def __del__(self):
+        """Close database session when repository is destroyed."""
+        if hasattr(self, "db") and self.db:
+            try:
+                self.db.close()
+            except Exception:
+                pass  # Ignore errors during cleanup
+
+    def _seed_data(self) -> None:
+        if self._tickets:
+            return
+
         now = datetime.now(UTC)
-        self._tickets["TCK-10001"] = Ticket(
-            ticket_id="TCK-10001",
-            title="Unable to process subscription payment via Mastercard",
-            description=(
-                "Every time I try to renew my subscription, I receive a "
-                "Gateway Timeout error on checkout."
-            ),
-            category="billing",
-            priority="high",
-            status="in_progress",
-            assigned_agent_id="AGT-55412",
-            created_at=now,
-            updated_at=now,
-            timeline=[
-                TicketTimelineEvent(
-                    event_id="EVT-001",
-                    event_type="created",
-                    actor="system",
-                    description="Ticket automatically created on customer ingestion.",
-                    timestamp=now,
-                ),
-                TicketTimelineEvent(
-                    event_id="EVT-002",
-                    event_type="agent_assigned",
-                    actor="admin",
-                    description="Assigned to billing representative (AGT-55412).",
-                    timestamp=now,
-                ),
-            ],
-            comments=[
-                TicketComment(
-                    comment_id="CMT-001",
-                    author="AGT-55412",
-                    content="Checking with the gateway provider now. Will update soon.",
-                    timestamp=now,
-                )
-            ],
+        timeline_event = TicketTimelineEvent(
+            event_id="EVT-1001",
+            event_type="created",
+            actor="system",
+            description="Ticket successfully submitted by customer.",
+            timestamp=now,
         )
-        self._tickets["TCK-10002"] = Ticket(
-            ticket_id="TCK-10002",
-            title="SSO Integration failure for Okta identity provider",
-            description=(
-                "Users from my team are redirected to a blank screen after "
-                "successful authentication in Okta."
-            ),
-            category="technical",
-            priority="urgent",
-            status="open",
-            created_at=now,
-            updated_at=now,
-            timeline=[
-                TicketTimelineEvent(
-                    event_id="EVT-003",
-                    event_type="created",
-                    actor="customer",
-                    description="Ticket created by Okta administrator.",
-                    timestamp=now,
-                )
-            ],
+        comment = TicketComment(
+            comment_id="CMT-1001",
+            author="customer",
+            content="Customer requested assistance.",
+            timestamp=now,
         )
-        self._tickets["TCK-10003"] = Ticket(
-            ticket_id="TCK-10003",
-            title="General inquiry about custom enterprise SLA details",
-            description=(
-                "Could you provide the exact response and resolution target "
-                "times for custom SLAs?"
+
+        self._tickets = {
+            "TCK-10001": Ticket(
+                ticket_id="TCK-10001",
+                title="SAML login issue",
+                description="Customer cannot access SSO after password reset.",
+                category="technical",
+                priority="urgent",
+                status="open",
+                assigned_agent_id="AGT-10001",
+                created_at=now,
+                updated_at=now,
+                timeline=[timeline_event],
+                comments=[comment],
             ),
-            category="account",
-            priority="low",
-            status="closed",
-            assigned_agent_id="AGT-11002",
-            created_at=now,
-            updated_at=now,
-            timeline=[
-                TicketTimelineEvent(
-                    event_id="EVT-004",
-                    event_type="created",
-                    actor="customer",
-                    description="Ticket created from portal query.",
-                    timestamp=now,
-                ),
-                TicketTimelineEvent(
-                    event_id="EVT-005",
-                    event_type="status_updated",
-                    actor="AGT-11002",
-                    description="Resolved and closed after sharing the SLA brochure.",
-                    timestamp=now,
-                ),
-            ],
-        )
+            "TCK-10002": Ticket(
+                ticket_id="TCK-10002",
+                title="Invoice discrepancy",
+                description="Customer was charged twice for the latest invoice.",
+                category="billing",
+                priority="high",
+                status="in_progress",
+                assigned_agent_id="AGT-10002",
+                created_at=now,
+                updated_at=now,
+                timeline=[timeline_event],
+                comments=[],
+            ),
+            "TCK-10003": Ticket(
+                ticket_id="TCK-10003",
+                title="Account access request",
+                description="Customer needs account access restored after MFA change.",
+                category="account",
+                priority="medium",
+                status="resolved",
+                assigned_agent_id="AGT-10003",
+                created_at=now,
+                updated_at=now,
+                timeline=[timeline_event],
+                comments=[],
+            ),
+        }
 
     async def create(self, ticket: Ticket) -> Ticket:
-        async with self._lock:
-            self._tickets[ticket.ticket_id] = ticket
-            return ticket
+        self._tickets[ticket.ticket_id] = ticket
+        try:
+            db_ticket = DBTicket(
+                ticket_id=ticket.ticket_id,
+                title=ticket.title,
+                description=ticket.description,
+                category=ticket.category,
+                priority=ticket.priority,
+                status=ticket.status,
+                assigned_agent_id=ticket.assigned_agent_id,
+                created_at=ticket.created_at,
+                updated_at=ticket.updated_at,
+            )
+
+            self.db.add(db_ticket)
+            self.db.commit()
+            self.db.refresh(db_ticket)
+        except Exception:
+            self.db.rollback()
+
+        return ticket
 
     async def get_by_id(self, ticket_id: str) -> Ticket | None:
-        async with self._lock:
-            return self._tickets.get(ticket_id)
+        if ticket_id in self._tickets:
+            return self._tickets[ticket_id]
+
+        db_ticket = (
+            self.db.query(DBTicket)
+            .filter(DBTicket.ticket_id == ticket_id)
+            .first()
+        )
+
+        if db_ticket is None:
+            return None
+
+        ticket = Ticket(
+            ticket_id=db_ticket.ticket_id,
+            title=db_ticket.title,
+            description=db_ticket.description,
+            category=db_ticket.category,
+            priority=db_ticket.priority,
+            status=db_ticket.status,
+            assigned_agent_id=db_ticket.assigned_agent_id,
+            created_at=db_ticket.created_at,
+            updated_at=db_ticket.updated_at,
+            timeline=[],
+            comments=[],
+        )
+        self._tickets[ticket.ticket_id] = ticket
+        return ticket
 
     async def update(self, ticket: Ticket) -> Ticket:
-        async with self._lock:
-            ticket.updated_at = datetime.now(UTC)
-            self._tickets[ticket.ticket_id] = ticket
-            return ticket
+        self._tickets[ticket.ticket_id] = ticket
+
+        db_ticket = (
+            self.db.query(DBTicket)
+            .filter(DBTicket.ticket_id == ticket.ticket_id)
+            .first()
+        )
+
+        if db_ticket is None:
+            raise ValueError(f"Ticket '{ticket.ticket_id}' not found")
+
+        db_ticket.title = ticket.title
+        db_ticket.description = ticket.description
+        db_ticket.category = ticket.category
+        db_ticket.priority = ticket.priority
+        db_ticket.status = ticket.status
+        db_ticket.assigned_agent_id = ticket.assigned_agent_id
+        db_ticket.updated_at = ticket.updated_at
+
+        # Save comments
+        for comment in ticket.comments:
+            existing_comment = (
+                self.db.query(DBTicketComment)
+                .filter(DBTicketComment.comment_id == comment.comment_id)
+                .first()
+            )
+
+            if existing_comment is None:
+                db_comment = DBTicketComment(
+                    comment_id=comment.comment_id,
+                    ticket_id=ticket.ticket_id,
+                    author=comment.author,
+                    content=comment.content,
+                    timestamp=comment.timestamp,
+                )
+                self.db.add(db_comment)
+
+        # Save timeline
+        for event in ticket.timeline:
+            existing_event = (
+                self.db.query(DBTicketTimeline)
+                .filter(DBTicketTimeline.event_id == event.event_id)
+                .first()
+            )
+
+            if existing_event is None:
+                db_event = DBTicketTimeline(
+                    event_id=event.event_id,
+                    ticket_id=ticket.ticket_id,
+                    event_type=event.event_type,
+                    actor=event.actor,
+                    description=event.description,
+                    timestamp=event.timestamp,
+                    metadata_json={},
+                )
+                self.db.add(db_event)
+
+        self.db.commit()
+        self.db.refresh(db_ticket)
+
+        return ticket
 
     async def delete(self, ticket_id: str) -> bool:
-        async with self._lock:
-            if ticket_id in self._tickets:
-                del self._tickets[ticket_id]
-                return True
+        self._tickets.pop(ticket_id, None)
+
+        db_ticket = (
+            self.db.query(DBTicket)
+            .filter(DBTicket.ticket_id == ticket_id)
+            .first()
+        )
+
+        if db_ticket is None:
             return False
 
-    async def list_and_filter(
-        self, filters: TicketFilterParams, page: int = 1, size: int = 10
+        self.db.delete(db_ticket)
+        self.db.commit()
+
+        return True
+
+    async def list_tickets(
+        self,
+        filters: TicketFilterParams,
+        page: int = 1,
+        size: int = 10,
     ) -> tuple[list[Ticket], int]:
-        async with self._lock:
-            matched_tickets = list(self._tickets.values())
-
-            # Apply filters
+        if self._tickets:
+            items = list(self._tickets.values())
             if filters.category:
-                matched_tickets = [
-                    t for t in matched_tickets if t.category.lower() == filters.category.lower()
-                ]
+                items = [item for item in items if item.category == filters.category]
             if filters.priority:
-                matched_tickets = [
-                    t for t in matched_tickets if t.priority.lower() == filters.priority.lower()
-                ]
+                items = [item for item in items if item.priority == filters.priority]
             if filters.status:
-                matched_tickets = [
-                    t for t in matched_tickets if t.status.lower() == filters.status.lower()
-                ]
+                items = [item for item in items if item.status == filters.status]
             if filters.assigned_agent_id:
-                matched_tickets = [
-                    t for t in matched_tickets if t.assigned_agent_id == filters.assigned_agent_id
-                ]
+                items = [ item for item in items if item.assigned_agent_id == filters.assigned_agent_id ]
             if filters.search_query:
-                q = filters.search_query.lower()
-                matched_tickets = [
-                    t
-                    for t in matched_tickets
-                    if q in t.title.lower()
-                    or q in t.description.lower()
-                    or q in t.ticket_id.lower()
+                search_query = filters.search_query.lower()
+                items = [
+                    item
+                    for item in items
+                    if search_query in item.title.lower() or search_query in item.description.lower()
                 ]
 
-            # Apply Sorting
-            sort_by = filters.sort_by or "created_at"
-            reverse = filters.sort_order == SortOrder.DESC
+            items.sort(
+                key=lambda item: getattr(item, filters.sort_by or "created_at"),
+                reverse=filters.sort_order == "desc",
+            )
 
-            def sort_key(t: Ticket):
-                val = getattr(t, sort_by, None)
-                if val is None:
-                    return ""
-                return val
+            total = len(items)
+            paged_items = items[(page - 1) * size : page * size]
+            return paged_items, total
 
-            matched_tickets.sort(key=sort_key, reverse=reverse)
+        query = self.db.query(DBTicket)
 
-            total = len(matched_tickets)
-            start = (page - 1) * size
-            end = start + size
-            items = matched_tickets[start:end]
+        if filters.search_query:
+            query = query.filter(
+                or_(
+                    DBTicket.title.ilike(f"%{filters.search_query}%"),
+                    DBTicket.description.ilike(f"%{filters.search_query}%"),
+                )
+            )
 
-            return items, total
+        if filters.status:
+            query = query.filter(DBTicket.status == filters.status)
+
+        if filters.priority:
+            query = query.filter(DBTicket.priority == filters.priority)
+
+        if filters.category:
+            query = query.filter(DBTicket.category == filters.category)
+
+        if filters.assigned_agent_id:
+            query = query.filter(DBTicket.assigned_agent_id == filters.assigned_agent_id)
+
+        total = query.count()
+
+        db_tickets = query.offset((page - 1) * size).limit(size).all()
+
+        tickets = []
+        for db_ticket in db_tickets:
+            tickets.append(
+                Ticket(
+                    ticket_id=db_ticket.ticket_id,
+                    title=db_ticket.title,
+                    description=db_ticket.description,
+                    category=db_ticket.category,
+                    priority=db_ticket.priority,
+                    status=db_ticket.status,
+                    assigned_agent_id=db_ticket.assigned_agent_id,
+                    created_at=db_ticket.created_at,
+                    updated_at=db_ticket.updated_at,
+                    timeline=[],
+                    comments=[],
+                )
+            )
+
+        return tickets, total
+
+    async def list_and_filter(
+        self,
+        filters: TicketFilterParams,
+        page: int = 1,
+        size: int = 10,
+    ) -> tuple[list[Ticket], int]:
+        return await self.list_tickets(filters, page=page, size=size)
 
     async def get_stats(self) -> dict[str, Any]:
-        async with self._lock:
-            tickets = list(self._tickets.values())
-
-            stats: dict[str, Any] = {
-                "total_count": len(tickets),
-                "open_count": sum(1 for t in tickets if t.status == "open"),
-                "in_progress_count": sum(1 for t in tickets if t.status == "in_progress"),
-                "closed_count": sum(1 for t in tickets if t.status == "closed"),
-                "escalated_count": sum(1 for t in tickets if t.status == "escalated"),
-                "distribution_by_priority": {},
-                "distribution_by_category": {},
+        if self._tickets:
+            total = len(self._tickets)
+            open_count = sum(1 for ticket in self._tickets.values() if ticket.status.lower() == "open")
+            in_progress = sum(1 for ticket in self._tickets.values() if ticket.status.lower() == "in_progress")
+            resolved = sum(1 for ticket in self._tickets.values() if ticket.status.lower() == "resolved")
+            closed = sum(1 for ticket in self._tickets.values() if ticket.status.lower() == "closed")
+            high = sum(1 for ticket in self._tickets.values() if ticket.priority.lower() == "high")
+            medium = sum(1 for ticket in self._tickets.values() if ticket.priority.lower() == "medium")
+            low = sum(1 for ticket in self._tickets.values() if ticket.priority.lower() == "low")
+            return {
+                "total": total,
+                "open": open_count,
+                "in_progress": in_progress,
+                "resolved": resolved,
+                "closed": closed,
+                "high_priority": high,
+                "medium_priority": medium,
+                "low_priority": low,
             }
 
-            for t in tickets:
-                p = t.priority
-                stats["distribution_by_priority"][p] = (
-                    stats["distribution_by_priority"].get(p, 0) + 1
-                )
-                c = t.category
-                stats["distribution_by_category"][c] = (
-                    stats["distribution_by_category"].get(c, 0) + 1
-                )
+        total = self.db.query(DBTicket).count()
 
-            return stats
+        open_count = (
+            self.db.query(DBTicket)
+            .filter(DBTicket.status == "Open")
+            .count()
+        )
+
+        in_progress = (
+            self.db.query(DBTicket)
+            .filter(DBTicket.status == "In Progress")
+            .count()
+        )
+
+        resolved = (
+            self.db.query(DBTicket)
+            .filter(DBTicket.status == "Resolved")
+            .count()
+        )
+
+        closed = (
+            self.db.query(DBTicket)
+            .filter(DBTicket.status == "Closed")
+            .count()
+        )
+
+        high = (
+            self.db.query(DBTicket)
+            .filter(DBTicket.priority == "High")
+            .count()
+        )
+
+        medium = (
+            self.db.query(DBTicket)
+            .filter(DBTicket.priority == "Medium")
+            .count()
+        )
+
+        low = (
+            self.db.query(DBTicket)
+            .filter(DBTicket.priority == "Low")
+            .count()
+        )
+
+        return {
+            "total": total,
+            "open": open_count,
+            "in_progress": in_progress,
+            "resolved": resolved,
+            "closed": closed,
+            "high_priority": high,
+            "medium_priority": medium,
+            "low_priority": low,
+        }
 
 
-# Shared global repository instance for in-memory storage
+# Shared repository instance
 _repo_instance = TicketRepository()
 
 

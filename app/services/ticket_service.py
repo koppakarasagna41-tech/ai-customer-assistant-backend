@@ -13,20 +13,90 @@ from app.schemas.ticket import (
     TicketStatusUpdate,
     TicketUpdate,
 )
+from app.services.ai_conversation_history_service import (
+    AIConversationHistoryService,
+)
+from app.schemas.ai_conversation_history import (
+    AIConversationHistoryCreate,
+)
+from app.services.ai_confidence_score_service import (
+    AIConfidenceScoreService,
+)
+from app.services.ai_escalation_logic_service import (
+    AIEscalationLogicService,
+)
+from app.schemas.ai_escalation_logic import (
+    AIEscalationLogicCreate,
+)
+from app.schemas.ai_confidence_score import (
+    AIConfidenceScoreCreate,
+)
+from app.services.gemini_service import get_gemini_service
 from app.utils.ticket_validator import TicketValidator
+from app.services.ai_ticket_classification_service import (
+    AITicketClassificationService,
+)
+from app.services.ai_priority_prediction_service import (
+    AIPriorityPredictionService,
+)
+from app.services.ai_suggested_response_service import (
+    AISuggestedResponseService,
+)
+from app.schemas.ai_ticket_classification import (
+    AITicketClassificationCreate,
+)
+from app.schemas.ai_priority_prediction import (
+    AIPriorityPredictionCreate,
+)
 
+from app.schemas.ai_suggested_response import (
+    AISuggestedResponseCreate,
+)
 
 class TicketService:
-    def __init__(self, repository: TicketRepository):
-        self.repository = repository
+    def __init__(
+        self,
+        repository: TicketRepository | None = None,
+    ):
+        self.repository = (
+            repository
+            if repository
+            else get_ticket_repository()
+        )
+
+        self.ai_classification_service = (
+            AITicketClassificationService()
+        )
+
+        self.ai_priority_service = (
+            AIPriorityPredictionService()
+        )
+
+        self.ai_response_service = (
+            AISuggestedResponseService()
+            
+        )
+        self.ai_confidence_service = (
+            AIConfidenceScoreService()
+        )
+        self.ai_escalation_service = (
+            AIEscalationLogicService()
+        )
+        self.ai_conversation_service = (
+    AIConversationHistoryService()
+)
+        self.gemini_service = get_gemini_service()
 
     def _generate_ticket_id(self) -> str:
         # Generates an enterprise-format Ticket ID like TCK-48210
         num = random.randint(10000, 99999)
         return f"TCK-{num}"
 
-    async def create_ticket(self, data: TicketCreate, actor: str = "customer") -> Ticket:
-        # Validate and sanitize input fields
+    async def create_ticket(
+        self,
+        data: TicketCreate,
+        actor: str = "customer",
+    ) -> Ticket:
         TicketValidator.validate_priority(data.priority)
         sanitized_title = TicketValidator.sanitize_text(data.title)
         sanitized_desc = TicketValidator.sanitize_text(data.description)
@@ -55,7 +125,86 @@ class TicketService:
             comments=[],
         )
 
-        return await self.repository.create(ticket)
+        created_ticket = await self.repository.create(ticket)
+
+        ai_result = await self.gemini_service.analyze_ticket(
+            created_ticket.title,
+            created_ticket.description,
+        )
+
+        await self.ai_classification_service.create_classification(
+            AITicketClassificationCreate(
+                ticket_id=created_ticket.ticket_id,
+                predicted_category=ai_result["predicted_category"],
+                confidence_score=ai_result["confidence_score"],
+                model_name="gemini-2.5-flash",
+                prompt_version="v1",
+                raw_response=str(ai_result),
+            )
+        )
+
+        await self.ai_priority_service.create_prediction(
+            AIPriorityPredictionCreate(
+                ticket_id=created_ticket.ticket_id,
+                predicted_priority=ai_result["predicted_priority"],
+                confidence_score=ai_result["confidence_score"],
+                model_name="gemini-2.5-flash",
+                prompt_version="v1",
+                raw_response=str(ai_result),
+            )
+        )
+
+        await self.ai_response_service.create_response(
+            AISuggestedResponseCreate(
+                ticket_id=created_ticket.ticket_id,
+                suggested_response=ai_result["suggested_response"],
+                confidence_score=ai_result["confidence_score"],
+                model_name="gemini-2.5-flash",
+                prompt_version="v1",
+                status="generated",
+            )
+        )
+
+        await self.ai_confidence_service.create_confidence_score(
+            AIConfidenceScoreCreate(
+                ticket_id=created_ticket.ticket_id,
+                confidence_score=ai_result["confidence_score"],
+                prediction_type="overall",
+                model_name="gemini-flash-latest",
+            )
+        )
+        await self.ai_conversation_service.create_conversation(
+    AIConversationHistoryCreate(
+        ticket_id=created_ticket.ticket_id,
+        user_message=created_ticket.description,
+        ai_response=ai_result["suggested_response"],
+        model_name="gemini-flash-latest",
+        conversation_id=created_ticket.ticket_id,
+    )
+)
+
+        should_escalate = (
+            ai_result["predicted_priority"].lower() == "high"
+            or ai_result["confidence_score"] < 0.70
+        )
+
+        if should_escalate:
+            await self.ai_escalation_service.create_escalation(
+        AIEscalationLogicCreate(
+            ticket_id=created_ticket.ticket_id,
+            escalation_reason=(
+                "High priority ticket"
+                if ai_result["predicted_priority"].lower() == "high"
+                else "Low AI confidence"
+            ),
+            escalation_level="Level 1",
+            assigned_team="Support Team",
+            status="pending",
+            auto_escalated=True,
+        )
+    )
+
+        return created_ticket
 
     async def get_ticket(self, ticket_id: str) -> Ticket:
         ticket = await self.repository.get_by_id(ticket_id)
@@ -141,7 +290,10 @@ class TicketService:
         now = datetime.now(UTC)
         ticket.updated_at = now
 
-        desc = f"Priority escalated/changed from '{old_priority}' to '{payload.priority}'."
+        desc = (
+            f"Priority escalated/changed from '{old_priority}' "
+            f"to '{payload.priority}'."
+        )
         if payload.comment:
             desc += f" Comment: {payload.comment}"
 
@@ -155,7 +307,12 @@ class TicketService:
         ticket.timeline.append(event)
         return await self.repository.update(ticket)
 
-    async def assign_agent(self, ticket_id: str, payload: TicketAgentAssign, actor: str) -> Ticket:
+    async def assign_agent(
+        self,
+        ticket_id: str,
+        payload: TicketAgentAssign,
+        actor: str,
+    ) -> Ticket:
         ticket = await self.get_ticket(ticket_id)
 
         old_agent = ticket.assigned_agent_id
@@ -165,7 +322,10 @@ class TicketService:
 
         desc = f"Assigned to agent '{payload.assigned_agent_id}'."
         if old_agent:
-            desc = f"Reassigned from '{old_agent}' to '{payload.assigned_agent_id}'."
+            desc = (
+                f"Reassigned from '{old_agent}' "
+                f"to '{payload.assigned_agent_id}'."
+            )
         if payload.comment:
             desc += f" Note: {payload.comment}"
 
@@ -179,7 +339,11 @@ class TicketService:
         ticket.timeline.append(event)
         return await self.repository.update(ticket)
 
-    async def add_comment(self, ticket_id: str, payload: TicketCommentCreate) -> TicketComment:
+    async def add_comment(
+        self,
+        ticket_id: str,
+        payload: TicketCommentCreate,
+    ) -> TicketComment:
         ticket = await self.get_ticket(ticket_id)
         now = datetime.now(UTC)
 
@@ -200,6 +364,7 @@ class TicketService:
         )
         ticket.timeline.append(event)
         ticket.updated_at = now
+
         await self.repository.update(ticket)
         return comment
 
@@ -212,9 +377,16 @@ class TicketService:
         return await self.repository.get_stats()
 
     async def list_tickets(
-        self, filters: TicketFilterParams, page: int = 1, size: int = 10
-    ) -> tuple[list[Ticket], int]:
-        return await self.repository.list_and_filter(filters, page, size)
+        self,
+        filters: TicketFilterParams,
+        page: int = 1,
+        size: int = 10,
+    ):
+        return await self.repository.list_and_filter(
+            filters,
+            page,
+            size,
+        )
 
 
 def get_ticket_service() -> TicketService:
