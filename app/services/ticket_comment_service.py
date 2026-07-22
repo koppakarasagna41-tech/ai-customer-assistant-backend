@@ -3,7 +3,7 @@ from app.repositories.ticket_comment_repository import (
     TicketCommentRepository,
     get_ticket_comment_repository,
 )
-from app.schemas.ticket_comment import TicketCommentCreate, TicketCommentUpdate
+from app.schemas.ticket_comment import TicketCommentCreate
 
 
 class TicketCommentService:

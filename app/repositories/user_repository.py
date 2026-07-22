@@ -1,6 +1,6 @@
 import asyncio
-from datetime import UTC, datetime, timedelta
-
+from datetime import UTC, datetime
+from contextlib import suppress
 from sqlalchemy.orm import Session
 
 from app.database.database import SessionLocal
@@ -61,7 +61,13 @@ class UserRepository:
                 full_name="Support Admin User",
                 hashed_password=PasswordHasher.hash_password("admin_pass123"),
                 role="support_admin",
-                permissions=["create_ticket", "update_ticket", "assign_ticket", "access_ai_chat", "manage_knowledge_base"],
+                permissions=[
+                    "create_ticket",
+                    "update_ticket",
+                    "assign_ticket",
+                    "access_ai_chat",
+                    "manage_knowledge_base",
+                ],
                 is_active=True,
                 created_at=now,
                 updated_at=now,
@@ -73,7 +79,15 @@ class UserRepository:
                 full_name="Supervisor User",
                 hashed_password=PasswordHasher.hash_password("super_pass123"),
                 role="supervisor",
-                permissions=["create_ticket", "update_ticket", "assign_ticket", "access_ai_chat", "view_analytics", "export_reports", "manage_knowledge_base"],
+                permissions=[
+                    "create_ticket",
+                    "update_ticket",
+                    "assign_ticket",
+                    "access_ai_chat",
+                    "view_analytics",
+                    "export_reports",
+                    "manage_knowledge_base",
+                ],
                 is_active=True,
                 created_at=now,
                 updated_at=now,
@@ -85,7 +99,17 @@ class UserRepository:
                 full_name="System Admin User",
                 hashed_password=PasswordHasher.hash_password("sysadmin_pass123"),
                 role="system_admin",
-                permissions=["create_ticket", "update_ticket", "delete_ticket", "assign_ticket", "view_analytics", "export_reports", "access_ai_chat", "manage_knowledge_base", "manage_users"],
+                permissions=[
+                    "create_ticket",
+                    "update_ticket",
+                    "delete_ticket",
+                    "assign_ticket",
+                    "view_analytics",
+                    "export_reports",
+                    "access_ai_chat",
+                    "manage_knowledge_base",
+                    "manage_users",
+                ],
                 is_active=True,
                 created_at=now,
                 updated_at=now,
@@ -123,11 +147,7 @@ class UserRepository:
         if self._users:
             return None
 
-        db_user = (
-            self.db.query(DBUser)
-            .filter(DBUser.user_id == user_id)
-            .first()
-        )
+        db_user = self.db.query(DBUser).filter(DBUser.user_id == user_id).first()
 
         if not db_user:
             return None
@@ -155,11 +175,7 @@ class UserRepository:
         if self._users:
             return None
 
-        db_user = (
-            self.db.query(DBUser)
-            .filter(DBUser.username == username)
-            .first()
-        )
+        db_user = self.db.query(DBUser).filter(DBUser.username == username).first()
 
         if not db_user:
             return None
@@ -187,11 +203,7 @@ class UserRepository:
         if self._users:
             return None
 
-        db_user = (
-            self.db.query(DBUser)
-            .filter(DBUser.email == email)
-            .first()
-        )
+        db_user = self.db.query(DBUser).filter(DBUser.email == email).first()
 
         if not db_user:
             return None
@@ -247,11 +259,7 @@ class UserRepository:
         user.updated_at = datetime.now(UTC)
         self._users[user.user_id] = user
 
-        db_user = (
-            self.db.query(DBUser)
-            .filter(DBUser.user_id == user_id)
-            .first()
-        )
+        db_user = self.db.query(DBUser).filter(DBUser.user_id == user_id).first()
         if db_user:
             for key, value in kwargs.items():
                 if value is not None:
@@ -266,11 +274,7 @@ class UserRepository:
         if user_id in self._users:
             self._users.pop(user_id, None)
 
-        db_user = (
-            self.db.query(DBUser)
-            .filter(DBUser.user_id == user_id)
-            .first()
-        )
+        db_user = self.db.query(DBUser).filter(DBUser.user_id == user_id).first()
 
         if not db_user:
             return False

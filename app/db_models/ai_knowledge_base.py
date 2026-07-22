@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text
 from pgvector.sqlalchemy import Vector
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text
 
 from app.database.database import Base
 
@@ -36,9 +36,9 @@ class AIKnowledgeBase(Base):
         nullable=True,
     )
     embedding = Column(
-    Vector(768),
-    nullable=True,
-)
+        Vector(768),
+        nullable=True,
+    )
 
     chunk_id = Column(
         String,

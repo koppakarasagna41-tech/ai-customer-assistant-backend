@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from contextlib import suppress
 from app.database.database import SessionLocal
 from app.db_models.ai_confidence_score import (
     AIConfidenceScore as DBAIConfidenceScore,
@@ -36,9 +36,7 @@ class AIConfidenceScoreRepository:
         self.db.commit()
         self.db.refresh(db_confidence)
 
-        return AIConfidenceScore.model_validate(
-            db_confidence
-        )
+        return AIConfidenceScore.model_validate(db_confidence)
 
     async def get_by_ticket_id(
         self,
@@ -51,10 +49,7 @@ class AIConfidenceScoreRepository:
             .all()
         )
 
-        return [
-            AIConfidenceScore.model_validate(item)
-            for item in scores
-        ]
+        return [AIConfidenceScore.model_validate(item) for item in scores]
 
     async def update(
         self,
@@ -77,9 +72,7 @@ class AIConfidenceScoreRepository:
         self.db.commit()
         self.db.refresh(confidence)
 
-        return AIConfidenceScore.model_validate(
-            confidence
-        )
+        return AIConfidenceScore.model_validate(confidence)
 
     async def delete(
         self,
@@ -100,7 +93,5 @@ class AIConfidenceScoreRepository:
         return True
 
 
-def get_ai_confidence_score_repository() -> (
-    AIConfidenceScoreRepository
-):
+def get_ai_confidence_score_repository() -> AIConfidenceScoreRepository:
     return AIConfidenceScoreRepository()

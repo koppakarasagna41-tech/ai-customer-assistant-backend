@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from contextlib import suppress
 from app.database.database import SessionLocal
 from app.db_models.notification import Notification as DBNotification
 from app.models.notification import Notification
@@ -12,11 +12,8 @@ class NotificationRepository:
     def __del__(self):
         """Close database session when repository is destroyed."""
         if hasattr(self, "db") and self.db:
-            try:
+            with suppress(Exception):
                 self.db.close()
-            except Exception:
-                pass
-
     async def create(self, notification: Notification) -> Notification:
         db_notification = DBNotification(
             user_id=notification.user_id,
@@ -40,16 +37,11 @@ class NotificationRepository:
             .all()
         )
 
-        return [
-            Notification.model_validate(notification)
-            for notification in notifications
-        ]
+        return [Notification.model_validate(notification) for notification in notifications]
 
     async def get_by_id(self, notification_id: int) -> Notification | None:
         notification = (
-            self.db.query(DBNotification)
-            .filter(DBNotification.id == notification_id)
-            .first()
+            self.db.query(DBNotification).filter(DBNotification.id == notification_id).first()
         )
 
         if not notification:
@@ -59,9 +51,7 @@ class NotificationRepository:
 
     async def mark_as_read(self, notification_id: int) -> Notification | None:
         notification = (
-            self.db.query(DBNotification)
-            .filter(DBNotification.id == notification_id)
-            .first()
+            self.db.query(DBNotification).filter(DBNotification.id == notification_id).first()
         )
 
         if not notification:
@@ -76,9 +66,7 @@ class NotificationRepository:
 
     async def delete(self, notification_id: int) -> bool:
         notification = (
-            self.db.query(DBNotification)
-            .filter(DBNotification.id == notification_id)
-            .first()
+            self.db.query(DBNotification).filter(DBNotification.id == notification_id).first()
         )
 
         if not notification:

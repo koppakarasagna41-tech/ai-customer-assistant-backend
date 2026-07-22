@@ -19,9 +19,7 @@ router = APIRouter()
 )
 async def create_assignment(
     assignment: AssignmentHistoryCreate,
-    service: AssignmentHistoryService = Depends(
-        get_assignment_history_service
-    ),
+    service: AssignmentHistoryService = Depends(get_assignment_history_service),
 ):
     return await service.create_assignment(assignment)
 
@@ -32,9 +30,7 @@ async def create_assignment(
 )
 async def get_assignments(
     ticket_id: str,
-    service: AssignmentHistoryService = Depends(
-        get_assignment_history_service
-    ),
+    service: AssignmentHistoryService = Depends(get_assignment_history_service),
 ):
     return await service.get_assignments(ticket_id)
 
@@ -45,9 +41,7 @@ async def get_assignments(
 )
 async def get_assignment(
     assignment_id: int,
-    service: AssignmentHistoryService = Depends(
-        get_assignment_history_service
-    ),
+    service: AssignmentHistoryService = Depends(get_assignment_history_service),
 ):
     assignment = await service.get_assignment(assignment_id)
 
@@ -65,9 +59,7 @@ async def get_assignment(
 )
 async def delete_assignment(
     assignment_id: int,
-    service: AssignmentHistoryService = Depends(
-        get_assignment_history_service
-    ),
+    service: AssignmentHistoryService = Depends(get_assignment_history_service),
 ):
     deleted = await service.delete_assignment(assignment_id)
 

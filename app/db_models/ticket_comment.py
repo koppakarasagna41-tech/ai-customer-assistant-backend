@@ -22,5 +22,4 @@ class TicketComment(Base):
 
     timestamp = Column(DateTime, default=datetime.utcnow)
 
-    
     ticket = relationship("Ticket", back_populates="comments")

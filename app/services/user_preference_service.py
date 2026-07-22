@@ -16,11 +16,7 @@ class UserPreferenceService:
         self,
         repository: UserPreferenceRepository | None = None,
     ):
-        self.repository = (
-            repository
-            if repository
-            else get_user_preference_repository()
-        )
+        self.repository = repository if repository else get_user_preference_repository()
 
     async def create_preference(
         self,

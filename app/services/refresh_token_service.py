@@ -11,11 +11,7 @@ class RefreshTokenService:
         self,
         repository: RefreshTokenRepository | None = None,
     ):
-        self.repository = (
-            repository
-            if repository
-            else get_refresh_token_repository()
-        )
+        self.repository = repository if repository else get_refresh_token_repository()
 
     async def create_refresh_token(
         self,

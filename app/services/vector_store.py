@@ -107,6 +107,7 @@ class VectorStoreFactory:
             # supports switching providers.
             if cls._provider == "postgres":
                 from app.services.postgres_vector_store import PostgresVectorStore
+
                 logger.info("Initializing PostgreSQL Vector Store...")
                 cls._instance = PostgresVectorStore()
             elif cls._provider == "in_memory":

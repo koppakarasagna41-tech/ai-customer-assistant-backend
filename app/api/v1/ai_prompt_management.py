@@ -20,9 +20,7 @@ router = APIRouter()
 )
 async def create_prompt(
     data: AIPromptManagementCreate,
-    service: AIPromptManagementService = Depends(
-        get_ai_prompt_management_service
-    ),
+    service: AIPromptManagementService = Depends(get_ai_prompt_management_service),
 ):
     return await service.create_prompt(data)
 
@@ -32,9 +30,7 @@ async def create_prompt(
     response_model=list[AIPromptManagementResponse],
 )
 async def get_all_prompts(
-    service: AIPromptManagementService = Depends(
-        get_ai_prompt_management_service
-    ),
+    service: AIPromptManagementService = Depends(get_ai_prompt_management_service),
 ):
     return await service.get_all_prompts()
 
@@ -45,9 +41,7 @@ async def get_all_prompts(
 )
 async def get_prompt(
     prompt_id: int,
-    service: AIPromptManagementService = Depends(
-        get_ai_prompt_management_service
-    ),
+    service: AIPromptManagementService = Depends(get_ai_prompt_management_service),
 ):
     prompt = await service.get_prompt(prompt_id)
 
@@ -67,9 +61,7 @@ async def get_prompt(
 async def update_prompt(
     prompt_id: int,
     data: AIPromptManagementUpdate,
-    service: AIPromptManagementService = Depends(
-        get_ai_prompt_management_service
-    ),
+    service: AIPromptManagementService = Depends(get_ai_prompt_management_service),
 ):
     prompt = await service.update_prompt(
         prompt_id,
@@ -90,13 +82,9 @@ async def update_prompt(
 )
 async def delete_prompt(
     prompt_id: int,
-    service: AIPromptManagementService = Depends(
-        get_ai_prompt_management_service
-    ),
+    service: AIPromptManagementService = Depends(get_ai_prompt_management_service),
 ):
-    deleted = await service.delete_prompt(
-        prompt_id
-    )
+    deleted = await service.delete_prompt(prompt_id)
 
     if not deleted:
         raise HTTPException(
@@ -104,6 +92,4 @@ async def delete_prompt(
             detail="Prompt not found",
         )
 
-    return {
-        "message": "Prompt deleted successfully"
-    }
+    return {"message": "Prompt deleted successfully"}

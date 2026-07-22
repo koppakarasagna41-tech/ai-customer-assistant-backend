@@ -18,11 +18,7 @@ class AIPriorityPredictionService:
         self,
         repository: AIPriorityPredictionRepository | None = None,
     ):
-        self.repository = (
-            repository
-            if repository
-            else get_ai_priority_prediction_repository()
-        )
+        self.repository = repository if repository else get_ai_priority_prediction_repository()
 
     async def create_prediction(
         self,
@@ -68,7 +64,5 @@ class AIPriorityPredictionService:
         return await self.repository.delete(ticket_id)
 
 
-def get_ai_priority_prediction_service() -> (
-    AIPriorityPredictionService
-):
+def get_ai_priority_prediction_service() -> AIPriorityPredictionService:
     return AIPriorityPredictionService()

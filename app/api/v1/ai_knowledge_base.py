@@ -20,9 +20,7 @@ router = APIRouter()
 )
 async def create_knowledge(
     data: AIKnowledgeBaseCreate,
-    service: AIKnowledgeBaseService = Depends(
-        get_ai_knowledge_base_service
-    ),
+    service: AIKnowledgeBaseService = Depends(get_ai_knowledge_base_service),
 ):
     return await service.create_knowledge(data)
 
@@ -32,9 +30,7 @@ async def create_knowledge(
     response_model=list[AIKnowledgeBaseResponse],
 )
 async def get_all_knowledge(
-    service: AIKnowledgeBaseService = Depends(
-        get_ai_knowledge_base_service
-    ),
+    service: AIKnowledgeBaseService = Depends(get_ai_knowledge_base_service),
 ):
     return await service.get_all_knowledge()
 
@@ -45,13 +41,9 @@ async def get_all_knowledge(
 )
 async def get_knowledge(
     knowledge_id: int,
-    service: AIKnowledgeBaseService = Depends(
-        get_ai_knowledge_base_service
-    ),
+    service: AIKnowledgeBaseService = Depends(get_ai_knowledge_base_service),
 ):
-    knowledge = await service.get_knowledge(
-        knowledge_id
-    )
+    knowledge = await service.get_knowledge(knowledge_id)
 
     if not knowledge:
         raise HTTPException(
@@ -69,9 +61,7 @@ async def get_knowledge(
 async def update_knowledge(
     knowledge_id: int,
     data: AIKnowledgeBaseUpdate,
-    service: AIKnowledgeBaseService = Depends(
-        get_ai_knowledge_base_service
-    ),
+    service: AIKnowledgeBaseService = Depends(get_ai_knowledge_base_service),
 ):
     knowledge = await service.update_knowledge(
         knowledge_id,
@@ -92,13 +82,9 @@ async def update_knowledge(
 )
 async def delete_knowledge(
     knowledge_id: int,
-    service: AIKnowledgeBaseService = Depends(
-        get_ai_knowledge_base_service
-    ),
+    service: AIKnowledgeBaseService = Depends(get_ai_knowledge_base_service),
 ):
-    deleted = await service.delete_knowledge(
-        knowledge_id
-    )
+    deleted = await service.delete_knowledge(knowledge_id)
 
     if not deleted:
         raise HTTPException(
@@ -106,6 +92,4 @@ async def delete_knowledge(
             detail="Knowledge not found",
         )
 
-    return {
-        "message": "Knowledge deleted successfully"
-    }
+    return {"message": "Knowledge deleted successfully"}

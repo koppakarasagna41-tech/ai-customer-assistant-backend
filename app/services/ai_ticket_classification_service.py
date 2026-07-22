@@ -18,11 +18,7 @@ class AITicketClassificationService:
         self,
         repository: AITicketClassificationRepository | None = None,
     ):
-        self.repository = (
-            repository
-            if repository
-            else get_ai_ticket_classification_repository()
-        )
+        self.repository = repository if repository else get_ai_ticket_classification_repository()
 
     async def create_classification(
         self,
@@ -68,7 +64,5 @@ class AITicketClassificationService:
         return await self.repository.delete(ticket_id)
 
 
-def get_ai_ticket_classification_service() -> (
-    AITicketClassificationService
-):
+def get_ai_ticket_classification_service() -> AITicketClassificationService:
     return AITicketClassificationService()

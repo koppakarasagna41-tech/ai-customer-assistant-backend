@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from contextlib import suppress
 from app.database.database import SessionLocal
 from app.db_models.activity_log import ActivityLog as DBActivityLog
 from app.models.activity_log import ActivityLog
@@ -44,19 +44,14 @@ class ActivityLogRepository:
             .all()
         )
 
-        return [
-            ActivityLog.model_validate(item)
-            for item in activity_logs
-        ]
+        return [ActivityLog.model_validate(item) for item in activity_logs]
 
     async def get_by_id(
         self,
         activity_log_id: int,
     ) -> ActivityLog | None:
         activity_log = (
-            self.db.query(DBActivityLog)
-            .filter(DBActivityLog.id == activity_log_id)
-            .first()
+            self.db.query(DBActivityLog).filter(DBActivityLog.id == activity_log_id).first()
         )
 
         if not activity_log:
@@ -69,9 +64,7 @@ class ActivityLogRepository:
         activity_log_id: int,
     ) -> bool:
         activity_log = (
-            self.db.query(DBActivityLog)
-            .filter(DBActivityLog.id == activity_log_id)
-            .first()
+            self.db.query(DBActivityLog).filter(DBActivityLog.id == activity_log_id).first()
         )
 
         if not activity_log:

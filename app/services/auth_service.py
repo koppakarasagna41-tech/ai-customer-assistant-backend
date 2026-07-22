@@ -148,7 +148,7 @@ class AuthService:
 
         # Revoke old refresh token and store new one
         await self.refresh_token_repository.revoke(refresh_token)
-        
+
         expires_at = datetime.now(UTC) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
         new_refresh_token_model = RefreshTokenModel(
             user_id=user.user_id,

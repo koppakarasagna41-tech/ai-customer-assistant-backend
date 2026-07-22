@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from contextlib import suppress
 from app.database.database import SessionLocal
 from app.db_models.conversation import Conversation as DBConversation
 from app.models.conversation import Conversation
@@ -11,10 +11,9 @@ class ConversationRepository:
 
     def __del__(self):
         if hasattr(self, "db") and self.db:
-            try:
+            with suppress(Exception):
                 self.db.close()
-            except Exception:
-                pass
+                
 
     async def create(self, conversation: Conversation) -> Conversation:
         db_item = DBConversation(
@@ -38,11 +37,20 @@ class ConversationRepository:
         return Conversation.model_validate(row)
 
     async def list_by_user(self, user_id: str) -> list[Conversation]:
-        rows = self.db.query(DBConversation).filter(DBConversation.user_id == user_id).order_by(DBConversation.updated_at.desc()).all()
+        rows = (
+            self.db.query(DBConversation)
+            .filter(DBConversation.user_id == user_id)
+            .order_by(DBConversation.updated_at.desc())
+            .all()
+        )
         return [Conversation.model_validate(row) for row in rows]
 
     async def update(self, conversation: Conversation) -> Conversation:
-        row = self.db.query(DBConversation).filter(DBConversation.session_id == conversation.session_id).first()
+        row = (
+            self.db.query(DBConversation)
+            .filter(DBConversation.session_id == conversation.session_id)
+            .first()
+        )
         if not row:
             raise ValueError(f"Conversation '{conversation.session_id}' not found")
         row.user_id = conversation.user_id

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from contextlib import suppress
 from app.database.database import SessionLocal
 from app.db_models.ticket_comment import TicketComment as DBTicketComment
 from app.models.ticket_comment import TicketComment
@@ -11,10 +11,8 @@ class TicketCommentRepository:
 
     def __del__(self):
         if hasattr(self, "db") and self.db:
-            try:
+            with suppress(Exception):
                 self.db.close()
-            except Exception:
-                pass
 
     async def create(self, ticket_id: str, comment: TicketComment) -> TicketComment:
         db_comment = DBTicketComment(
@@ -39,7 +37,9 @@ class TicketCommentRepository:
         return [TicketComment.model_validate(item) for item in comments]
 
     async def delete(self, comment_id: str) -> bool:
-        row = self.db.query(DBTicketComment).filter(DBTicketComment.comment_id == comment_id).first()
+        row = (
+            self.db.query(DBTicketComment).filter(DBTicketComment.comment_id == comment_id).first()
+        )
         if not row:
             return False
         self.db.delete(row)

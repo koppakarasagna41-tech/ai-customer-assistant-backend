@@ -10,7 +10,11 @@ class TicketTimelineService:
     def __init__(self, repository: TicketTimelineRepository | None = None):
         self.repository = repository if repository else get_ticket_timeline_repository()
 
-    async def create_event(self, ticket_id: str, payload: TicketTimelineEntryCreate) -> TicketTimelineEntry:
+    async def create_event(
+        self,
+        ticket_id: str,
+        payload: TicketTimelineEntryCreate,
+    ) -> TicketTimelineEntry:
         event = TicketTimelineEntry(
             event_id=f"EVT-{__import__('random').randint(10000, 99999)}",
             ticket_id=ticket_id,

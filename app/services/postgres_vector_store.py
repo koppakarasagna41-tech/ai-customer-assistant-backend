@@ -28,26 +28,15 @@ class PostgresVectorStore(VectorStore):
         filters: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
 
-        query = self.db.query(DBAIKnowledgeBase).filter(
-            DBAIKnowledgeBase.is_active.is_(True)
-        )
+        query = self.db.query(DBAIKnowledgeBase).filter(DBAIKnowledgeBase.is_active.is_(True))
 
         if filters:
             for key, value in filters.items():
-                if (
-                    value is not None
-                    and hasattr(DBAIKnowledgeBase, key)
-                ):
-                    query = query.filter(
-                        getattr(DBAIKnowledgeBase, key) == value
-                    )
+                if value is not None and hasattr(DBAIKnowledgeBase, key):
+                    query = query.filter(getattr(DBAIKnowledgeBase, key) == value)
 
         rows = (
-            query.order_by(
-                DBAIKnowledgeBase.embedding.cosine_distance(
-                    query_vector
-                )
-            )
+            query.order_by(DBAIKnowledgeBase.embedding.cosine_distance(query_vector))
             .limit(top_k)
             .all()
         )

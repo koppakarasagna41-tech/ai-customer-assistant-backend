@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from contextlib import suppress
 from app.database.database import SessionLocal
 from app.db_models.ai_knowledge_base import (
     AIKnowledgeBase as DBAIKnowledgeBase,
@@ -16,13 +16,11 @@ class AIKnowledgeBaseRepository:
     def __del__(self):
         """Close database session when repository is destroyed."""
         if hasattr(self, "db") and self.db:
-            try:
+            with suppress(Exception):
                 self.db.close()
-            except Exception:
-                pass
 
     async def create(
-        self,
+        self, 
         knowledge: AIKnowledgeBase,
     ) -> AIKnowledgeBase:
         db_knowledge = DBAIKnowledgeBase(
@@ -40,40 +38,27 @@ class AIKnowledgeBaseRepository:
         self.db.commit()
         self.db.refresh(db_knowledge)
 
-        return AIKnowledgeBase.model_validate(
-            db_knowledge
-        )
+        return AIKnowledgeBase.model_validate(db_knowledge)
 
     async def get_by_id(
         self,
         knowledge_id: int,
     ) -> AIKnowledgeBase | None:
         knowledge = (
-            self.db.query(DBAIKnowledgeBase)
-            .filter(DBAIKnowledgeBase.id == knowledge_id)
-            .first()
+            self.db.query(DBAIKnowledgeBase).filter(DBAIKnowledgeBase.id == knowledge_id).first()
         )
 
         if not knowledge:
             return None
 
-        return AIKnowledgeBase.model_validate(
-            knowledge
-        )
+        return AIKnowledgeBase.model_validate(knowledge)
 
     async def get_all(
         self,
     ) -> list[AIKnowledgeBase]:
-        knowledge = (
-            self.db.query(DBAIKnowledgeBase)
-            .order_by(DBAIKnowledgeBase.id.desc())
-            .all()
-        )
+        knowledge = self.db.query(DBAIKnowledgeBase).order_by(DBAIKnowledgeBase.id.desc()).all()
 
-        return [
-            AIKnowledgeBase.model_validate(item)
-            for item in knowledge
-        ]
+        return [AIKnowledgeBase.model_validate(item) for item in knowledge]
 
     async def update(
         self,
@@ -81,9 +66,7 @@ class AIKnowledgeBaseRepository:
         **kwargs,
     ) -> AIKnowledgeBase | None:
         knowledge = (
-            self.db.query(DBAIKnowledgeBase)
-            .filter(DBAIKnowledgeBase.id == knowledge_id)
-            .first()
+            self.db.query(DBAIKnowledgeBase).filter(DBAIKnowledgeBase.id == knowledge_id).first()
         )
 
         if not knowledge:
@@ -96,9 +79,7 @@ class AIKnowledgeBaseRepository:
         self.db.commit()
         self.db.refresh(knowledge)
 
-        return AIKnowledgeBase.model_validate(
-            knowledge
-        )
+        return AIKnowledgeBase.model_validate(knowledge)
 
     async def search_similar(
         self,
@@ -108,28 +89,19 @@ class AIKnowledgeBaseRepository:
         knowledge = (
             self.db.query(DBAIKnowledgeBase)
             .filter(DBAIKnowledgeBase.is_active.is_(True))
-            .order_by(
-                DBAIKnowledgeBase.embedding.cosine_distance(
-                    embedding
-                )
-            )
+            .order_by(DBAIKnowledgeBase.embedding.cosine_distance(embedding))
             .limit(limit)
             .all()
         )
 
-        return [
-            AIKnowledgeBase.model_validate(item)
-            for item in knowledge
-        ]
+        return [AIKnowledgeBase.model_validate(item) for item in knowledge]
 
     async def delete(
         self,
         knowledge_id: int,
     ) -> bool:
         knowledge = (
-            self.db.query(DBAIKnowledgeBase)
-            .filter(DBAIKnowledgeBase.id == knowledge_id)
-            .first()
+            self.db.query(DBAIKnowledgeBase).filter(DBAIKnowledgeBase.id == knowledge_id).first()
         )
 
         if not knowledge:

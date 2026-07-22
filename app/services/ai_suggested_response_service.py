@@ -18,11 +18,7 @@ class AISuggestedResponseService:
         self,
         repository: AISuggestedResponseRepository | None = None,
     ):
-        self.repository = (
-            repository
-            if repository
-            else get_ai_suggested_response_repository()
-        )
+        self.repository = repository if repository else get_ai_suggested_response_repository()
 
     async def create_response(
         self,
@@ -68,7 +64,5 @@ class AISuggestedResponseService:
         return await self.repository.delete(ticket_id)
 
 
-def get_ai_suggested_response_service() -> (
-    AISuggestedResponseService
-):
+def get_ai_suggested_response_service() -> AISuggestedResponseService:
     return AISuggestedResponseService()

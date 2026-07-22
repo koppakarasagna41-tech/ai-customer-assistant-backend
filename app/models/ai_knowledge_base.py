@@ -3,8 +3,6 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 
-
-
 class AIKnowledgeBase(BaseModel):
     id: int
     document_title: str

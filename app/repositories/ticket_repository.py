@@ -1,7 +1,7 @@
 import asyncio
 from datetime import UTC, datetime
 from typing import Any
-
+from contextlib import suppress
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
@@ -23,10 +23,8 @@ class TicketRepository:
     def __del__(self):
         """Close database session when repository is destroyed."""
         if hasattr(self, "db") and self.db:
-            try:
+            with suppress(Exception):
                 self.db.close()
-            except Exception:
-                pass  # Ignore errors during cleanup
 
     def _seed_data(self) -> None:
         if self._tickets:
@@ -116,11 +114,7 @@ class TicketRepository:
         if ticket_id in self._tickets:
             return self._tickets[ticket_id]
 
-        db_ticket = (
-            self.db.query(DBTicket)
-            .filter(DBTicket.ticket_id == ticket_id)
-            .first()
-        )
+        db_ticket = self.db.query(DBTicket).filter(DBTicket.ticket_id == ticket_id).first()
 
         if db_ticket is None:
             return None
@@ -144,11 +138,7 @@ class TicketRepository:
     async def update(self, ticket: Ticket) -> Ticket:
         self._tickets[ticket.ticket_id] = ticket
 
-        db_ticket = (
-            self.db.query(DBTicket)
-            .filter(DBTicket.ticket_id == ticket.ticket_id)
-            .first()
-        )
+        db_ticket = self.db.query(DBTicket).filter(DBTicket.ticket_id == ticket.ticket_id).first()
 
         if db_ticket is None:
             raise ValueError(f"Ticket '{ticket.ticket_id}' not found")
@@ -207,11 +197,7 @@ class TicketRepository:
     async def delete(self, ticket_id: str) -> bool:
         self._tickets.pop(ticket_id, None)
 
-        db_ticket = (
-            self.db.query(DBTicket)
-            .filter(DBTicket.ticket_id == ticket_id)
-            .first()
-        )
+        db_ticket = self.db.query(DBTicket).filter(DBTicket.ticket_id == ticket_id).first()
 
         if db_ticket is None:
             return False
@@ -236,13 +222,16 @@ class TicketRepository:
             if filters.status:
                 items = [item for item in items if item.status == filters.status]
             if filters.assigned_agent_id:
-                items = [ item for item in items if item.assigned_agent_id == filters.assigned_agent_id ]
+                items = [
+                    item for item in items if item.assigned_agent_id == filters.assigned_agent_id
+                ]
             if filters.search_query:
                 search_query = filters.search_query.lower()
                 items = [
                     item
                     for item in items
-                    if search_query in item.title.lower() or search_query in item.description.lower()
+                    if search_query in item.title.lower()
+                    or search_query in item.description.lower()
                 ]
 
             items.sort(
@@ -311,12 +300,22 @@ class TicketRepository:
     async def get_stats(self) -> dict[str, Any]:
         if self._tickets:
             total = len(self._tickets)
-            open_count = sum(1 for ticket in self._tickets.values() if ticket.status.lower() == "open")
-            in_progress = sum(1 for ticket in self._tickets.values() if ticket.status.lower() == "in_progress")
-            resolved = sum(1 for ticket in self._tickets.values() if ticket.status.lower() == "resolved")
-            closed = sum(1 for ticket in self._tickets.values() if ticket.status.lower() == "closed")
+            open_count = sum(
+                1 for ticket in self._tickets.values() if ticket.status.lower() == "open"
+            )
+            in_progress = sum(
+                1 for ticket in self._tickets.values() if ticket.status.lower() == "in_progress"
+            )
+            resolved = sum(
+                1 for ticket in self._tickets.values() if ticket.status.lower() == "resolved"
+            )
+            closed = sum(
+                1 for ticket in self._tickets.values() if ticket.status.lower() == "closed"
+            )
             high = sum(1 for ticket in self._tickets.values() if ticket.priority.lower() == "high")
-            medium = sum(1 for ticket in self._tickets.values() if ticket.priority.lower() == "medium")
+            medium = sum(
+                1 for ticket in self._tickets.values() if ticket.priority.lower() == "medium"
+            )
             low = sum(1 for ticket in self._tickets.values() if ticket.priority.lower() == "low")
             return {
                 "total": total,
@@ -331,47 +330,19 @@ class TicketRepository:
 
         total = self.db.query(DBTicket).count()
 
-        open_count = (
-            self.db.query(DBTicket)
-            .filter(DBTicket.status == "Open")
-            .count()
-        )
+        open_count = self.db.query(DBTicket).filter(DBTicket.status == "Open").count()
 
-        in_progress = (
-            self.db.query(DBTicket)
-            .filter(DBTicket.status == "In Progress")
-            .count()
-        )
+        in_progress = self.db.query(DBTicket).filter(DBTicket.status == "In Progress").count()
 
-        resolved = (
-            self.db.query(DBTicket)
-            .filter(DBTicket.status == "Resolved")
-            .count()
-        )
+        resolved = self.db.query(DBTicket).filter(DBTicket.status == "Resolved").count()
 
-        closed = (
-            self.db.query(DBTicket)
-            .filter(DBTicket.status == "Closed")
-            .count()
-        )
+        closed = self.db.query(DBTicket).filter(DBTicket.status == "Closed").count()
 
-        high = (
-            self.db.query(DBTicket)
-            .filter(DBTicket.priority == "High")
-            .count()
-        )
+        high = self.db.query(DBTicket).filter(DBTicket.priority == "High").count()
 
-        medium = (
-            self.db.query(DBTicket)
-            .filter(DBTicket.priority == "Medium")
-            .count()
-        )
+        medium = self.db.query(DBTicket).filter(DBTicket.priority == "Medium").count()
 
-        low = (
-            self.db.query(DBTicket)
-            .filter(DBTicket.priority == "Low")
-            .count()
-        )
+        low = self.db.query(DBTicket).filter(DBTicket.priority == "Low").count()
 
         return {
             "total": total,

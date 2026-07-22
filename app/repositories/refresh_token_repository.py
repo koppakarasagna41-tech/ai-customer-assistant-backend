@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from contextlib import suppress
 from app.database.database import SessionLocal
 from app.db_models.refresh_token import (
     RefreshToken as DBRefreshToken,
@@ -14,11 +14,8 @@ class RefreshTokenRepository:
     def __del__(self):
         """Close database session when repository is destroyed."""
         if hasattr(self, "db") and self.db:
-            try:
+            with suppress(Exception):
                 self.db.close()
-            except Exception:
-                pass
-
     async def create(
         self,
         refresh_token: RefreshToken,
@@ -41,9 +38,7 @@ class RefreshTokenRepository:
         token: str,
     ) -> RefreshToken | None:
         refresh_token = (
-            self.db.query(DBRefreshToken)
-            .filter(DBRefreshToken.refresh_token == token)
-            .first()
+            self.db.query(DBRefreshToken).filter(DBRefreshToken.refresh_token == token).first()
         )
 
         if not refresh_token:
@@ -56,9 +51,7 @@ class RefreshTokenRepository:
         token: str,
     ) -> bool:
         refresh_token = (
-            self.db.query(DBRefreshToken)
-            .filter(DBRefreshToken.refresh_token == token)
-            .first()
+            self.db.query(DBRefreshToken).filter(DBRefreshToken.refresh_token == token).first()
         )
 
         if not refresh_token:

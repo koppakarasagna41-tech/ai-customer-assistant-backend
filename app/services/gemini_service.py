@@ -32,14 +32,7 @@ Required JSON format:
         contents = [
             {
                 "role": "user",
-                "parts": [
-                    {
-                        "text": (
-                            f"Title: {title}\n"
-                            f"Description: {description}"
-                        )
-                    }
-                ],
+                "parts": [{"text": (f"Title: {title}\n" f"Description: {description}")}],
             }
         ]
 
@@ -50,9 +43,7 @@ Required JSON format:
             temperature=0.2,
         )
 
-        text = (
-            response["candidates"][0]["content"]["parts"][0]["text"]
-        )
+        text = response["candidates"][0]["content"]["parts"][0]["text"]
 
         import json
 

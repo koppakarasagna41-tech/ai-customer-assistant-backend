@@ -13,11 +13,7 @@ class AuditLogService:
         self,
         repository: AuditLogRepository | None = None,
     ):
-        self.repository = (
-            repository
-            if repository
-            else get_audit_log_repository()
-        )
+        self.repository = repository if repository else get_audit_log_repository()
 
     async def create_audit_log(
         self,

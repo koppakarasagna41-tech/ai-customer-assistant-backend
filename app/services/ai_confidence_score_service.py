@@ -18,11 +18,7 @@ class AIConfidenceScoreService:
         self,
         repository: AIConfidenceScoreRepository | None = None,
     ):
-        self.repository = (
-            repository
-            if repository
-            else get_ai_confidence_score_repository()
-        )
+        self.repository = repository if repository else get_ai_confidence_score_repository()
 
     async def create_confidence_score(
         self,
@@ -37,17 +33,13 @@ class AIConfidenceScoreService:
             created_at=datetime.now(UTC),
         )
 
-        return await self.repository.create(
-            confidence
-        )
+        return await self.repository.create(confidence)
 
     async def get_confidence_scores(
         self,
         ticket_id: str,
     ) -> list[AIConfidenceScore]:
-        return await self.repository.get_by_ticket_id(
-            ticket_id
-        )
+        return await self.repository.get_by_ticket_id(ticket_id)
 
     async def update_confidence_score(
         self,
@@ -65,12 +57,8 @@ class AIConfidenceScoreService:
         self,
         confidence_id: int,
     ) -> bool:
-        return await self.repository.delete(
-            confidence_id
-        )
+        return await self.repository.delete(confidence_id)
 
 
-def get_ai_confidence_score_service() -> (
-    AIConfidenceScoreService
-):
+def get_ai_confidence_score_service() -> AIConfidenceScoreService:
     return AIConfidenceScoreService()

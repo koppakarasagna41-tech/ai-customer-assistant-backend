@@ -12,8 +12,10 @@ from typing import Any, cast
 logger = logging.getLogger("app.services.gemini_client")
 
 
-class CircuitBreakerState(str, Enum):
+from enum import StrEnum
+class CircuitBreakerState(StrEnum):
     """States for the circuit breaker pattern."""
+
     CLOSED = "closed"  # Normal operation
     OPEN = "open"  # Reject requests
     HALF_OPEN = "half_open"  # Allow single request to test recovery
@@ -21,7 +23,7 @@ class CircuitBreakerState(str, Enum):
 
 class CircuitBreaker:
     """Circuit breaker to prevent cascading failures."""
-    
+
     def __init__(
         self,
         failure_threshold: int = 5,
@@ -49,7 +51,7 @@ class CircuitBreaker:
             result = func(*args, **kwargs)
             self._on_success()
             return result
-        except self.expected_exception as e:
+        except self.expected_exception:
             self._on_failure()
             raise
 
@@ -71,9 +73,7 @@ class CircuitBreaker:
         self.last_failure_time = time.time()
         if self.failure_count >= self.failure_threshold:
             self.state = CircuitBreakerState.OPEN
-            logger.warning(
-                "Circuit breaker opened after %d failures", self.failure_count
-            )
+            logger.warning("Circuit breaker opened after %d failures", self.failure_count)
 
 
 class GeminiClient:
@@ -151,7 +151,7 @@ class GeminiClient:
                 )
 
                 response_body = await loop.run_in_executor(None, self._perform_request, req)
-                
+
                 # Parse JSON response with error handling
                 try:
                     response_data = json.loads(response_body)
@@ -165,9 +165,7 @@ class GeminiClient:
                     )
                     if attempt == max_retries - 1:
                         self.circuit_breaker._on_failure()
-                        raise ValueError(
-                            f"Gemini API returned invalid JSON: {e!s}"
-                        ) from e
+                        raise ValueError(f"Gemini API returned invalid JSON: {e!s}") from e
                     await asyncio.sleep(backoff)
                     backoff *= 2
                     continue
@@ -175,7 +173,7 @@ class GeminiClient:
                 # Reset circuit breaker on success
                 if self.circuit_breaker.state == CircuitBreakerState.HALF_OPEN:
                     self.circuit_breaker._on_success()
-                
+
                 return cast(dict[str, Any], response_data)
 
             except urllib.error.HTTPError as e:
@@ -193,8 +191,12 @@ class GeminiClient:
                 if attempt == max_retries - 1:
                     self.circuit_breaker._on_failure()
                     raise ValueError(
-                        f"Gemini API returned error: {e.code} - {e.reason}. Body: {error_body[:500]}"
-                    ) from e
+    (
+        f"Gemini API returned error: "
+        f"{e.code} - {e.reason}. "
+        f"Body: {error_body[:500]}"
+    )
+) from e
                 await asyncio.sleep(backoff)
                 backoff *= 2
 

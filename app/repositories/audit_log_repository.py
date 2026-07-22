@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from contextlib import suppress
 from app.database.database import SessionLocal
 from app.db_models.audit_log import AuditLog as DBAuditLog
 from app.models.audit_log import AuditLog
@@ -12,10 +12,8 @@ class AuditLogRepository:
     def __del__(self):
         """Close database session when repository is destroyed."""
         if hasattr(self, "db") and self.db:
-            try:
+            with suppress(Exception):
                 self.db.close()
-            except Exception:
-                pass
 
     async def create(
         self,
@@ -35,26 +33,15 @@ class AuditLogRepository:
         return AuditLog.model_validate(db_audit_log)
 
     async def list_all(self) -> list[AuditLog]:
-        audit_logs = (
-            self.db.query(DBAuditLog)
-            .order_by(DBAuditLog.created_at.desc())
-            .all()
-        )
+        audit_logs = self.db.query(DBAuditLog).order_by(DBAuditLog.created_at.desc()).all()
 
-        return [
-            AuditLog.model_validate(item)
-            for item in audit_logs
-        ]
+        return [AuditLog.model_validate(item) for item in audit_logs]
 
     async def get_by_id(
         self,
         audit_log_id: int,
     ) -> AuditLog | None:
-        audit_log = (
-            self.db.query(DBAuditLog)
-            .filter(DBAuditLog.id == audit_log_id)
-            .first()
-        )
+        audit_log = self.db.query(DBAuditLog).filter(DBAuditLog.id == audit_log_id).first()
 
         if not audit_log:
             return None
@@ -65,11 +52,7 @@ class AuditLogRepository:
         self,
         audit_log_id: int,
     ) -> bool:
-        audit_log = (
-            self.db.query(DBAuditLog)
-            .filter(DBAuditLog.id == audit_log_id)
-            .first()
-        )
+        audit_log = self.db.query(DBAuditLog).filter(DBAuditLog.id == audit_log_id).first()
 
         if not audit_log:
             return False

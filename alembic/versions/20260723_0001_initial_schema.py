@@ -1,13 +1,13 @@
 """Initial production schema
 
 Revision ID: 20260723_0001
-Revises: 
+Revises:
 Create Date: 2026-07-23 00:00:00.000000
 """
 
-from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "20260723_0001"
@@ -74,7 +74,9 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["ticket_id"], ["tickets.ticket_id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("comment_id"),
     )
-    op.create_index(op.f("ix_ticket_comments_comment_id"), "ticket_comments", ["comment_id"], unique=False)
+    op.create_index(
+        op.f("ix_ticket_comments_comment_id"), "ticket_comments", ["comment_id"], unique=False
+    )
 
     op.create_table(
         "ticket_timeline",
@@ -88,7 +90,9 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["ticket_id"], ["tickets.ticket_id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("event_id"),
     )
-    op.create_index(op.f("ix_ticket_timeline_event_id"), "ticket_timeline", ["event_id"], unique=False)
+    op.create_index(
+        op.f("ix_ticket_timeline_event_id"), "ticket_timeline", ["event_id"], unique=False
+    )
 
     op.create_table(
         "activity_logs",
@@ -188,7 +192,9 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("session_id"),
     )
-    op.create_index(op.f("ix_conversations_session_id"), "conversations", ["session_id"], unique=False)
+    op.create_index(
+        op.f("ix_conversations_session_id"), "conversations", ["session_id"], unique=False
+    )
 
     op.create_table(
         "analytics",

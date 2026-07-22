@@ -7,6 +7,7 @@ from app.db_models.ai_suggested_response import (
 from app.models.ai_suggested_response import (
     AISuggestedResponse,
 )
+from contextlib import suppress
 
 
 class AISuggestedResponseRepository:
@@ -16,11 +17,9 @@ class AISuggestedResponseRepository:
     def __del__(self):
         """Close database session when repository is destroyed."""
         if hasattr(self, "db") and self.db:
-            try:
+            with suppress(Exception):
                 self.db.close()
-            except Exception:
-                pass
-
+                
     async def create(
         self,
         response: AISuggestedResponse,
@@ -38,9 +37,7 @@ class AISuggestedResponseRepository:
         self.db.commit()
         self.db.refresh(db_response)
 
-        return AISuggestedResponse.model_validate(
-            db_response
-        )
+        return AISuggestedResponse.model_validate(db_response)
 
     async def get_by_ticket_id(
         self,
@@ -48,18 +45,14 @@ class AISuggestedResponseRepository:
     ) -> AISuggestedResponse | None:
         response = (
             self.db.query(DBAISuggestedResponse)
-            .filter(
-                DBAISuggestedResponse.ticket_id == ticket_id
-            )
+            .filter(DBAISuggestedResponse.ticket_id == ticket_id)
             .first()
         )
 
         if not response:
             return None
 
-        return AISuggestedResponse.model_validate(
-            response
-        )
+        return AISuggestedResponse.model_validate(response)
 
     async def update(
         self,
@@ -68,9 +61,7 @@ class AISuggestedResponseRepository:
     ) -> AISuggestedResponse | None:
         response = (
             self.db.query(DBAISuggestedResponse)
-            .filter(
-                DBAISuggestedResponse.ticket_id == ticket_id
-            )
+            .filter(DBAISuggestedResponse.ticket_id == ticket_id)
             .first()
         )
 
@@ -84,9 +75,7 @@ class AISuggestedResponseRepository:
         self.db.commit()
         self.db.refresh(response)
 
-        return AISuggestedResponse.model_validate(
-            response
-        )
+        return AISuggestedResponse.model_validate(response)
 
     async def delete(
         self,
@@ -94,9 +83,7 @@ class AISuggestedResponseRepository:
     ) -> bool:
         response = (
             self.db.query(DBAISuggestedResponse)
-            .filter(
-                DBAISuggestedResponse.ticket_id == ticket_id
-            )
+            .filter(DBAISuggestedResponse.ticket_id == ticket_id)
             .first()
         )
 
@@ -109,7 +96,5 @@ class AISuggestedResponseRepository:
         return True
 
 
-def get_ai_suggested_response_repository() -> (
-    AISuggestedResponseRepository
-):
+def get_ai_suggested_response_repository() -> AISuggestedResponseRepository:
     return AISuggestedResponseRepository()

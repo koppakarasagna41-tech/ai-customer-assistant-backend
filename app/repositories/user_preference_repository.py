@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from contextlib import suppress
 from app.database.database import SessionLocal
 from app.db_models.user_preference import (
     UserPreference as DBUserPreference,
@@ -14,10 +14,8 @@ class UserPreferenceRepository:
     def __del__(self):
         """Close database session when repository is destroyed."""
         if hasattr(self, "db") and self.db:
-            try:
+            with suppress(Exception):
                 self.db.close()
-            except Exception:
-                pass
 
     async def create(
         self,
@@ -42,9 +40,7 @@ class UserPreferenceRepository:
         user_id: str,
     ) -> UserPreference | None:
         preference = (
-            self.db.query(DBUserPreference)
-            .filter(DBUserPreference.user_id == user_id)
-            .first()
+            self.db.query(DBUserPreference).filter(DBUserPreference.user_id == user_id).first()
         )
 
         if not preference:
@@ -58,9 +54,7 @@ class UserPreferenceRepository:
         **kwargs,
     ) -> UserPreference | None:
         preference = (
-            self.db.query(DBUserPreference)
-            .filter(DBUserPreference.user_id == user_id)
-            .first()
+            self.db.query(DBUserPreference).filter(DBUserPreference.user_id == user_id).first()
         )
 
         if not preference:

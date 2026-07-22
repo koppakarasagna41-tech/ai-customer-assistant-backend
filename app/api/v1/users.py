@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Path, status
 
 from app.schemas.user import UserResponse, UserUpdate
-from app.services.auth_service import AuthService, get_auth_service
 from app.services.user_service import UserService, get_user_service
 
 router = APIRouter()

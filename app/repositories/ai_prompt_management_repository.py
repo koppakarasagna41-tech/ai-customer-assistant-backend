@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from contextlib import suppress
 from app.database.database import SessionLocal
 from app.db_models.ai_prompt_management import (
     AIPromptManagement as DBAIPromptManagement,
@@ -16,11 +16,8 @@ class AIPromptManagementRepository:
     def __del__(self):
         """Close database session when repository is destroyed."""
         if hasattr(self, "db") and self.db:
-            try:
+            with suppress(Exception):
                 self.db.close()
-            except Exception:
-                pass
-
     async def create(
         self,
         prompt: AIPromptManagement,
@@ -37,40 +34,27 @@ class AIPromptManagementRepository:
         self.db.commit()
         self.db.refresh(db_prompt)
 
-        return AIPromptManagement.model_validate(
-            db_prompt
-        )
+        return AIPromptManagement.model_validate(db_prompt)
 
     async def get_by_id(
         self,
         prompt_id: int,
     ) -> AIPromptManagement | None:
         prompt = (
-            self.db.query(DBAIPromptManagement)
-            .filter(DBAIPromptManagement.id == prompt_id)
-            .first()
+            self.db.query(DBAIPromptManagement).filter(DBAIPromptManagement.id == prompt_id).first()
         )
 
         if not prompt:
             return None
 
-        return AIPromptManagement.model_validate(
-            prompt
-        )
+        return AIPromptManagement.model_validate(prompt)
 
     async def get_all(
         self,
     ) -> list[AIPromptManagement]:
-        prompts = (
-            self.db.query(DBAIPromptManagement)
-            .order_by(DBAIPromptManagement.id.desc())
-            .all()
-        )
+        prompts = self.db.query(DBAIPromptManagement).order_by(DBAIPromptManagement.id.desc()).all()
 
-        return [
-            AIPromptManagement.model_validate(item)
-            for item in prompts
-        ]
+        return [AIPromptManagement.model_validate(item) for item in prompts]
 
     async def update(
         self,
@@ -78,9 +62,7 @@ class AIPromptManagementRepository:
         **kwargs,
     ) -> AIPromptManagement | None:
         prompt = (
-            self.db.query(DBAIPromptManagement)
-            .filter(DBAIPromptManagement.id == prompt_id)
-            .first()
+            self.db.query(DBAIPromptManagement).filter(DBAIPromptManagement.id == prompt_id).first()
         )
 
         if not prompt:
@@ -93,18 +75,14 @@ class AIPromptManagementRepository:
         self.db.commit()
         self.db.refresh(prompt)
 
-        return AIPromptManagement.model_validate(
-            prompt
-        )
+        return AIPromptManagement.model_validate(prompt)
 
     async def delete(
         self,
         prompt_id: int,
     ) -> bool:
         prompt = (
-            self.db.query(DBAIPromptManagement)
-            .filter(DBAIPromptManagement.id == prompt_id)
-            .first()
+            self.db.query(DBAIPromptManagement).filter(DBAIPromptManagement.id == prompt_id).first()
         )
 
         if not prompt:
@@ -116,7 +94,5 @@ class AIPromptManagementRepository:
         return True
 
 
-def get_ai_prompt_management_repository() -> (
-    AIPromptManagementRepository
-):
+def get_ai_prompt_management_repository() -> AIPromptManagementRepository:
     return AIPromptManagementRepository()

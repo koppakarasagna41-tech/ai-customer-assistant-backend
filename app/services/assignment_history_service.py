@@ -15,11 +15,7 @@ class AssignmentHistoryService:
         self,
         repository: AssignmentHistoryRepository | None = None,
     ):
-        self.repository = (
-            repository
-            if repository
-            else get_assignment_history_repository()
-        )
+        self.repository = repository if repository else get_assignment_history_repository()
 
     async def create_assignment(
         self,

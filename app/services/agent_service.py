@@ -1,5 +1,6 @@
 import random
 from datetime import UTC, datetime
+
 from app.models.agent import Agent
 from app.repositories.agent_repository import (
     AgentRepository,
@@ -13,11 +14,7 @@ class AgentService:
         self,
         repository: AgentRepository | None = None,
     ):
-        self.repository = (
-            repository
-            if repository
-            else get_agent_repository()
-        )
+        self.repository = repository if repository else get_agent_repository()
 
     async def create_agent(
         self,

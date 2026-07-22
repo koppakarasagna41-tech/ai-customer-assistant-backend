@@ -25,5 +25,4 @@ class TicketTimeline(Base):
 
     metadata_json = Column(JSON, default=dict)
 
-    
     ticket = relationship("Ticket", back_populates="timeline")

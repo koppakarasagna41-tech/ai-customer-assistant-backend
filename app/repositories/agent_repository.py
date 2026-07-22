@@ -1,7 +1,7 @@
 import random
 
 from sqlalchemy.orm import Session
-
+from contextlib import suppress
 from app.database.database import SessionLocal
 from app.db_models.agent import Agent as DBAgent
 from app.models.agent import Agent
@@ -14,10 +14,8 @@ class AgentRepository:
     def __del__(self):
         """Close database session when repository is destroyed."""
         if hasattr(self, "db") and self.db:
-            try:
+            with suppress(Exception):
                 self.db.close()
-            except Exception:
-                pass
 
     async def create(
         self,
@@ -40,26 +38,15 @@ class AgentRepository:
     async def list_agents(
         self,
     ) -> list[Agent]:
-        agents = (
-            self.db.query(DBAgent)
-            .order_by(DBAgent.created_at.desc())
-            .all()
-        )
+        agents = self.db.query(DBAgent).order_by(DBAgent.created_at.desc()).all()
 
-        return [
-            Agent.model_validate(agent)
-            for agent in agents
-        ]
+        return [Agent.model_validate(agent) for agent in agents]
 
     async def get_by_id(
         self,
         agent_id: str,
     ) -> Agent | None:
-        agent = (
-            self.db.query(DBAgent)
-            .filter(DBAgent.agent_id == agent_id)
-            .first()
-        )
+        agent = self.db.query(DBAgent).filter(DBAgent.agent_id == agent_id).first()
 
         if not agent:
             return None
@@ -70,11 +57,7 @@ class AgentRepository:
         self,
         agent_id: str,
     ) -> bool:
-        agent = (
-            self.db.query(DBAgent)
-            .filter(DBAgent.agent_id == agent_id)
-            .first()
-        )
+        agent = self.db.query(DBAgent).filter(DBAgent.agent_id == agent_id).first()
 
         if not agent:
             return False

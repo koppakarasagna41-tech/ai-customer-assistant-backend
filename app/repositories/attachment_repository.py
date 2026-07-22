@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from contextlib import suppress
 from app.database.database import SessionLocal
 from app.db_models.attachment import Attachment as DBAttachment
 from app.models.attachment import Attachment
@@ -12,10 +12,8 @@ class AttachmentRepository:
     def __del__(self):
         """Close database session when repository is destroyed."""
         if hasattr(self, "db") and self.db:
-            try:
+            with suppress(Exception):
                 self.db.close()
-            except Exception:
-                pass
 
     async def create(self, attachment: Attachment) -> Attachment:
         db_attachment = DBAttachment(
@@ -43,20 +41,13 @@ class AttachmentRepository:
             .all()
         )
 
-        return [
-            Attachment.model_validate(attachment)
-            for attachment in attachments
-        ]
+        return [Attachment.model_validate(attachment) for attachment in attachments]
 
     async def get_by_id(
         self,
         attachment_id: int,
     ) -> Attachment | None:
-        attachment = (
-            self.db.query(DBAttachment)
-            .filter(DBAttachment.id == attachment_id)
-            .first()
-        )
+        attachment = self.db.query(DBAttachment).filter(DBAttachment.id == attachment_id).first()
 
         if not attachment:
             return None
@@ -67,11 +58,7 @@ class AttachmentRepository:
         self,
         attachment_id: int,
     ) -> bool:
-        attachment = (
-            self.db.query(DBAttachment)
-            .filter(DBAttachment.id == attachment_id)
-            .first()
-        )
+        attachment = self.db.query(DBAttachment).filter(DBAttachment.id == attachment_id).first()
 
         if not attachment:
             return False

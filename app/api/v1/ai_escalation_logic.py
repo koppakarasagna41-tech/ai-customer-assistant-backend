@@ -20,9 +20,7 @@ router = APIRouter()
 )
 async def create_escalation(
     data: AIEscalationLogicCreate,
-    service: AIEscalationLogicService = Depends(
-        get_ai_escalation_logic_service
-    ),
+    service: AIEscalationLogicService = Depends(get_ai_escalation_logic_service),
 ):
     return await service.create_escalation(data)
 
@@ -33,9 +31,7 @@ async def create_escalation(
 )
 async def get_escalations(
     ticket_id: str,
-    service: AIEscalationLogicService = Depends(
-        get_ai_escalation_logic_service
-    ),
+    service: AIEscalationLogicService = Depends(get_ai_escalation_logic_service),
 ):
     return await service.get_escalations(ticket_id)
 
@@ -47,9 +43,7 @@ async def get_escalations(
 async def update_escalation(
     escalation_id: int,
     data: AIEscalationLogicUpdate,
-    service: AIEscalationLogicService = Depends(
-        get_ai_escalation_logic_service
-    ),
+    service: AIEscalationLogicService = Depends(get_ai_escalation_logic_service),
 ):
     escalation = await service.update_escalation(
         escalation_id,
@@ -70,13 +64,9 @@ async def update_escalation(
 )
 async def delete_escalation(
     escalation_id: int,
-    service: AIEscalationLogicService = Depends(
-        get_ai_escalation_logic_service
-    ),
+    service: AIEscalationLogicService = Depends(get_ai_escalation_logic_service),
 ):
-    deleted = await service.delete_escalation(
-        escalation_id
-    )
+    deleted = await service.delete_escalation(escalation_id)
 
     if not deleted:
         raise HTTPException(
@@ -84,6 +74,4 @@ async def delete_escalation(
             detail="Escalation not found",
         )
 
-    return {
-        "message": "Escalation deleted successfully"
-    }
+    return {"message": "Escalation deleted successfully"}

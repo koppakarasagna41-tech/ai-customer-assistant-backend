@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from contextlib import suppress
 from app.database.database import SessionLocal
 from app.db_models.ai_ticket_classification import (
     AITicketClassification as DBAITicketClassification,
@@ -16,11 +16,8 @@ class AITicketClassificationRepository:
     def __del__(self):
         """Close database session when repository is destroyed."""
         if hasattr(self, "db") and self.db:
-            try:
+            with suppress(Exception):
                 self.db.close()
-            except Exception:
-                pass
-
     async def create(
         self,
         classification: AITicketClassification,
@@ -38,9 +35,7 @@ class AITicketClassificationRepository:
         self.db.commit()
         self.db.refresh(db_classification)
 
-        return AITicketClassification.model_validate(
-            db_classification
-        )
+        return AITicketClassification.model_validate(db_classification)
 
     async def get_by_ticket_id(
         self,
@@ -48,18 +43,14 @@ class AITicketClassificationRepository:
     ) -> AITicketClassification | None:
         classification = (
             self.db.query(DBAITicketClassification)
-            .filter(
-                DBAITicketClassification.ticket_id == ticket_id
-            )
+            .filter(DBAITicketClassification.ticket_id == ticket_id)
             .first()
         )
 
         if not classification:
             return None
 
-        return AITicketClassification.model_validate(
-            classification
-        )
+        return AITicketClassification.model_validate(classification)
 
     async def update(
         self,
@@ -68,9 +59,7 @@ class AITicketClassificationRepository:
     ) -> AITicketClassification | None:
         classification = (
             self.db.query(DBAITicketClassification)
-            .filter(
-                DBAITicketClassification.ticket_id == ticket_id
-            )
+            .filter(DBAITicketClassification.ticket_id == ticket_id)
             .first()
         )
 
@@ -84,9 +73,7 @@ class AITicketClassificationRepository:
         self.db.commit()
         self.db.refresh(classification)
 
-        return AITicketClassification.model_validate(
-            classification
-        )
+        return AITicketClassification.model_validate(classification)
 
     async def delete(
         self,
@@ -94,9 +81,7 @@ class AITicketClassificationRepository:
     ) -> bool:
         classification = (
             self.db.query(DBAITicketClassification)
-            .filter(
-                DBAITicketClassification.ticket_id == ticket_id
-            )
+            .filter(DBAITicketClassification.ticket_id == ticket_id)
             .first()
         )
 
@@ -109,7 +94,5 @@ class AITicketClassificationRepository:
         return True
 
 
-def get_ai_ticket_classification_repository() -> (
-    AITicketClassificationRepository
-):
+def get_ai_ticket_classification_repository() -> AITicketClassificationRepository:
     return AITicketClassificationRepository()

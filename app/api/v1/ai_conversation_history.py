@@ -20,9 +20,7 @@ router = APIRouter()
 )
 async def create_conversation(
     data: AIConversationHistoryCreate,
-    service: AIConversationHistoryService = Depends(
-        get_ai_conversation_history_service
-    ),
+    service: AIConversationHistoryService = Depends(get_ai_conversation_history_service),
 ):
     return await service.create_conversation(data)
 
@@ -33,9 +31,7 @@ async def create_conversation(
 )
 async def get_conversations(
     ticket_id: str,
-    service: AIConversationHistoryService = Depends(
-        get_ai_conversation_history_service
-    ),
+    service: AIConversationHistoryService = Depends(get_ai_conversation_history_service),
 ):
     return await service.get_conversations(ticket_id)
 
@@ -47,9 +43,7 @@ async def get_conversations(
 async def update_conversation(
     conversation_id: int,
     data: AIConversationHistoryUpdate,
-    service: AIConversationHistoryService = Depends(
-        get_ai_conversation_history_service
-    ),
+    service: AIConversationHistoryService = Depends(get_ai_conversation_history_service),
 ):
     conversation = await service.update_conversation(
         conversation_id,
@@ -70,13 +64,9 @@ async def update_conversation(
 )
 async def delete_conversation(
     conversation_id: int,
-    service: AIConversationHistoryService = Depends(
-        get_ai_conversation_history_service
-    ),
+    service: AIConversationHistoryService = Depends(get_ai_conversation_history_service),
 ):
-    deleted = await service.delete_conversation(
-        conversation_id
-    )
+    deleted = await service.delete_conversation(conversation_id)
 
     if not deleted:
         raise HTTPException(
@@ -84,6 +74,4 @@ async def delete_conversation(
             detail="Conversation not found",
         )
 
-    return {
-        "message": "Conversation deleted successfully"
-    }
+    return {"message": "Conversation deleted successfully"}

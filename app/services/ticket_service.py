@@ -4,6 +4,24 @@ from typing import Any
 
 from app.models.ticket import Ticket, TicketComment, TicketTimelineEvent
 from app.repositories.ticket_repository import TicketRepository, get_ticket_repository
+from app.schemas.ai_confidence_score import (
+    AIConfidenceScoreCreate,
+)
+from app.schemas.ai_conversation_history import (
+    AIConversationHistoryCreate,
+)
+from app.schemas.ai_escalation_logic import (
+    AIEscalationLogicCreate,
+)
+from app.schemas.ai_priority_prediction import (
+    AIPriorityPredictionCreate,
+)
+from app.schemas.ai_suggested_response import (
+    AISuggestedResponseCreate,
+)
+from app.schemas.ai_ticket_classification import (
+    AITicketClassificationCreate,
+)
 from app.schemas.filter import TicketFilterParams
 from app.schemas.ticket import (
     TicketAgentAssign,
@@ -13,28 +31,14 @@ from app.schemas.ticket import (
     TicketStatusUpdate,
     TicketUpdate,
 )
-from app.services.ai_conversation_history_service import (
-    AIConversationHistoryService,
-)
-from app.schemas.ai_conversation_history import (
-    AIConversationHistoryCreate,
-)
 from app.services.ai_confidence_score_service import (
     AIConfidenceScoreService,
 )
+from app.services.ai_conversation_history_service import (
+    AIConversationHistoryService,
+)
 from app.services.ai_escalation_logic_service import (
     AIEscalationLogicService,
-)
-from app.schemas.ai_escalation_logic import (
-    AIEscalationLogicCreate,
-)
-from app.schemas.ai_confidence_score import (
-    AIConfidenceScoreCreate,
-)
-from app.services.gemini_service import get_gemini_service
-from app.utils.ticket_validator import TicketValidator
-from app.services.ai_ticket_classification_service import (
-    AITicketClassificationService,
 )
 from app.services.ai_priority_prediction_service import (
     AIPriorityPredictionService,
@@ -42,49 +46,28 @@ from app.services.ai_priority_prediction_service import (
 from app.services.ai_suggested_response_service import (
     AISuggestedResponseService,
 )
-from app.schemas.ai_ticket_classification import (
-    AITicketClassificationCreate,
+from app.services.ai_ticket_classification_service import (
+    AITicketClassificationService,
 )
-from app.schemas.ai_priority_prediction import (
-    AIPriorityPredictionCreate,
-)
+from app.services.gemini_service import get_gemini_service
+from app.utils.ticket_validator import TicketValidator
 
-from app.schemas.ai_suggested_response import (
-    AISuggestedResponseCreate,
-)
 
 class TicketService:
     def __init__(
         self,
         repository: TicketRepository | None = None,
     ):
-        self.repository = (
-            repository
-            if repository
-            else get_ticket_repository()
-        )
+        self.repository = repository if repository else get_ticket_repository()
 
-        self.ai_classification_service = (
-            AITicketClassificationService()
-        )
+        self.ai_classification_service = AITicketClassificationService()
 
-        self.ai_priority_service = (
-            AIPriorityPredictionService()
-        )
+        self.ai_priority_service = AIPriorityPredictionService()
 
-        self.ai_response_service = (
-            AISuggestedResponseService()
-            
-        )
-        self.ai_confidence_service = (
-            AIConfidenceScoreService()
-        )
-        self.ai_escalation_service = (
-            AIEscalationLogicService()
-        )
-        self.ai_conversation_service = (
-    AIConversationHistoryService()
-)
+        self.ai_response_service = AISuggestedResponseService()
+        self.ai_confidence_service = AIConfidenceScoreService()
+        self.ai_escalation_service = AIEscalationLogicService()
+        self.ai_conversation_service = AIConversationHistoryService()
         self.gemini_service = get_gemini_service()
 
     def _generate_ticket_id(self) -> str:
@@ -174,14 +157,14 @@ class TicketService:
             )
         )
         await self.ai_conversation_service.create_conversation(
-    AIConversationHistoryCreate(
-        ticket_id=created_ticket.ticket_id,
-        user_message=created_ticket.description,
-        ai_response=ai_result["suggested_response"],
-        model_name="gemini-flash-latest",
-        conversation_id=created_ticket.ticket_id,
-    )
-)
+            AIConversationHistoryCreate(
+                ticket_id=created_ticket.ticket_id,
+                user_message=created_ticket.description,
+                ai_response=ai_result["suggested_response"],
+                model_name="gemini-flash-latest",
+                conversation_id=created_ticket.ticket_id,
+            )
+        )
 
         should_escalate = (
             ai_result["predicted_priority"].lower() == "high"
@@ -190,19 +173,19 @@ class TicketService:
 
         if should_escalate:
             await self.ai_escalation_service.create_escalation(
-        AIEscalationLogicCreate(
-            ticket_id=created_ticket.ticket_id,
-            escalation_reason=(
-                "High priority ticket"
-                if ai_result["predicted_priority"].lower() == "high"
-                else "Low AI confidence"
-            ),
-            escalation_level="Level 1",
-            assigned_team="Support Team",
-            status="pending",
-            auto_escalated=True,
-        )
-    )
+                AIEscalationLogicCreate(
+                    ticket_id=created_ticket.ticket_id,
+                    escalation_reason=(
+                        "High priority ticket"
+                        if ai_result["predicted_priority"].lower() == "high"
+                        else "Low AI confidence"
+                    ),
+                    escalation_level="Level 1",
+                    assigned_team="Support Team",
+                    status="pending",
+                    auto_escalated=True,
+                )
+            )
 
         return created_ticket
 
@@ -290,10 +273,7 @@ class TicketService:
         now = datetime.now(UTC)
         ticket.updated_at = now
 
-        desc = (
-            f"Priority escalated/changed from '{old_priority}' "
-            f"to '{payload.priority}'."
-        )
+        desc = f"Priority escalated/changed from '{old_priority}' " f"to '{payload.priority}'."
         if payload.comment:
             desc += f" Comment: {payload.comment}"
 
@@ -322,10 +302,7 @@ class TicketService:
 
         desc = f"Assigned to agent '{payload.assigned_agent_id}'."
         if old_agent:
-            desc = (
-                f"Reassigned from '{old_agent}' "
-                f"to '{payload.assigned_agent_id}'."
-            )
+            desc = f"Reassigned from '{old_agent}' " f"to '{payload.assigned_agent_id}'."
         if payload.comment:
             desc += f" Note: {payload.comment}"
 

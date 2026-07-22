@@ -3,7 +3,7 @@
 import logging
 import time
 from collections import defaultdict
-from typing import Callable
+from collections.abc import Callable
 
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -14,7 +14,7 @@ logger = logging.getLogger("app.middleware.rate_limiter")
 
 class RateLimiter:
     """Simple in-memory rate limiter using token bucket algorithm."""
-    
+
     def __init__(
         self,
         requests_per_minute: int = 60,
@@ -28,14 +28,14 @@ class RateLimiter:
     def is_allowed(self, client_id: str) -> bool:
         """Check if client is within rate limit."""
         now = time.time()
-        
+
         # Cleanup old entries periodically
         if now - self.last_cleanup > self.cleanup_interval:
             self._cleanup_old_entries(now)
 
         # Get request times for this client
         request_times = self.request_times[client_id]
-        
+
         # Remove requests older than 1 minute
         minute_ago = now - 60
         request_times[:] = [t for t in request_times if t > minute_ago]
@@ -52,7 +52,7 @@ class RateLimiter:
         """Remove clients with no recent activity."""
         minute_ago = now - 60
         clients_to_remove = []
-        
+
         for client_id, times in self.request_times.items():
             # Keep only recent times
             recent_times = [t for t in times if t > minute_ago]
@@ -60,17 +60,17 @@ class RateLimiter:
                 clients_to_remove.append(client_id)
             else:
                 self.request_times[client_id] = recent_times
-        
+
         # Remove inactive clients
         for client_id in clients_to_remove:
             del self.request_times[client_id]
-        
+
         self.last_cleanup = now
 
 
 class RateLimiterMiddleware(BaseHTTPMiddleware):
     """FastAPI middleware for rate limiting."""
-    
+
     def __init__(
         self,
         app,
@@ -104,15 +104,17 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
 
         # Process request
         response = await call_next(request)
-        
+
         # Add rate limit headers
         response.headers["X-RateLimit-Limit"] = str(self.limiter.requests_per_minute)
         response.headers["X-RateLimit-Remaining"] = str(
-            max(0, self.limiter.requests_per_minute - len(
-                self.limiter.request_times.get(client_id, [])
-            ))
+            max(
+                0,
+                self.limiter.requests_per_minute
+                - len(self.limiter.request_times.get(client_id, [])),
+            )
         )
-        
+
         return response
 
     @staticmethod
@@ -121,10 +123,10 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
         # Prefer X-Forwarded-For header (behind proxy)
         if "X-Forwarded-For" in request.headers:
             return request.headers["X-Forwarded-For"].split(",")[0].strip()
-        
+
         # Fall back to direct client IP
         if request.client:
             return request.client.host
-        
+
         # Last resort
         return "unknown"

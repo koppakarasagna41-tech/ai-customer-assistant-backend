@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from contextlib import suppress
 from app.database.database import SessionLocal
 from app.db_models.analytics import Analytics as DBAnalytics
 from app.models.analytics import Analytics
@@ -11,10 +11,8 @@ class AnalyticsRepository:
 
     def __del__(self):
         if hasattr(self, "db") and self.db:
-            try:
+            with suppress(Exception):
                 self.db.close()
-            except Exception:
-                pass
 
     async def create(self, analytics: Analytics) -> Analytics:
         db_item = DBAnalytics(

@@ -1,5 +1,8 @@
 from app.models.conversation import Conversation
-from app.repositories.conversation_repository import ConversationRepository, get_conversation_repository
+from app.repositories.conversation_repository import (
+    ConversationRepository,
+    get_conversation_repository,
+)
 from app.schemas.conversation import ConversationState
 
 

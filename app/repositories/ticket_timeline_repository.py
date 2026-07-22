@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from contextlib import suppress
 from app.database.database import SessionLocal
 from app.db_models.ticket_timeline import TicketTimeline as DBTicketTimeline
 from app.models.ticket_timeline import TicketTimelineEntry
@@ -11,10 +11,8 @@ class TicketTimelineRepository:
 
     def __del__(self):
         if hasattr(self, "db") and self.db:
-            try:
+            with suppress(Exception):
                 self.db.close()
-            except Exception:
-                pass
 
     async def create(self, ticket_id: str, event: TicketTimelineEntry) -> TicketTimelineEntry:
         db_event = DBTicketTimeline(

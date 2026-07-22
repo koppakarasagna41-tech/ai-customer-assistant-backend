@@ -13,11 +13,7 @@ class ActivityLogService:
         self,
         repository: ActivityLogRepository | None = None,
     ):
-        self.repository = (
-            repository
-            if repository
-            else get_activity_log_repository()
-        )
+        self.repository = repository if repository else get_activity_log_repository()
 
     async def create_activity_log(
         self,

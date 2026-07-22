@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, String, JSON
+from sqlalchemy import JSON, Boolean, Column, DateTime, String
 
 from app.database.database import Base
 
@@ -19,7 +19,4 @@ class User(Base):
     is_active = Column(Boolean, default=True)
 
     created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(
-        DateTime,
-          default=datetime.utcnow,
-          onupdate=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

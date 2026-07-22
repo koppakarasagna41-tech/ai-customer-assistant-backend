@@ -20,9 +20,7 @@ router = APIRouter()
 )
 async def create_confidence_score(
     data: AIConfidenceScoreCreate,
-    service: AIConfidenceScoreService = Depends(
-        get_ai_confidence_score_service
-    ),
+    service: AIConfidenceScoreService = Depends(get_ai_confidence_score_service),
 ):
     return await service.create_confidence_score(data)
 
@@ -33,9 +31,7 @@ async def create_confidence_score(
 )
 async def get_confidence_scores(
     ticket_id: str,
-    service: AIConfidenceScoreService = Depends(
-        get_ai_confidence_score_service
-    ),
+    service: AIConfidenceScoreService = Depends(get_ai_confidence_score_service),
 ):
     return await service.get_confidence_scores(ticket_id)
 
@@ -47,9 +43,7 @@ async def get_confidence_scores(
 async def update_confidence_score(
     confidence_id: int,
     data: AIConfidenceScoreUpdate,
-    service: AIConfidenceScoreService = Depends(
-        get_ai_confidence_score_service
-    ),
+    service: AIConfidenceScoreService = Depends(get_ai_confidence_score_service),
 ):
     confidence = await service.update_confidence_score(
         confidence_id,
@@ -70,13 +64,9 @@ async def update_confidence_score(
 )
 async def delete_confidence_score(
     confidence_id: int,
-    service: AIConfidenceScoreService = Depends(
-        get_ai_confidence_score_service
-    ),
+    service: AIConfidenceScoreService = Depends(get_ai_confidence_score_service),
 ):
-    deleted = await service.delete_confidence_score(
-        confidence_id
-    )
+    deleted = await service.delete_confidence_score(confidence_id)
 
     if not deleted:
         raise HTTPException(
@@ -84,6 +74,4 @@ async def delete_confidence_score(
             detail="Confidence score not found",
         )
 
-    return {
-        "message": "Confidence score deleted successfully"
-    }
+    return {"message": "Confidence score deleted successfully"}

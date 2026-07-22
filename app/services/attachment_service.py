@@ -11,11 +11,7 @@ class AttachmentService:
         self,
         repository: AttachmentRepository | None = None,
     ):
-        self.repository = (
-            repository
-            if repository
-            else get_attachment_repository()
-        )
+        self.repository = repository if repository else get_attachment_repository()
 
     async def create_attachment(
         self,

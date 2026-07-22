@@ -18,11 +18,7 @@ class AIConversationHistoryService:
         self,
         repository: AIConversationHistoryRepository | None = None,
     ):
-        self.repository = (
-            repository
-            if repository
-            else get_ai_conversation_history_repository()
-        )
+        self.repository = repository if repository else get_ai_conversation_history_repository()
 
     async def create_conversation(
         self,
@@ -38,17 +34,13 @@ class AIConversationHistoryService:
             created_at=datetime.now(UTC),
         )
 
-        return await self.repository.create(
-            conversation
-        )
+        return await self.repository.create(conversation)
 
     async def get_conversations(
         self,
         ticket_id: str,
     ) -> list[AIConversationHistory]:
-        return await self.repository.get_by_ticket_id(
-            ticket_id
-        )
+        return await self.repository.get_by_ticket_id(ticket_id)
 
     async def update_conversation(
         self,
@@ -67,12 +59,8 @@ class AIConversationHistoryService:
         self,
         conversation_id: int,
     ) -> bool:
-        return await self.repository.delete(
-            conversation_id
-        )
+        return await self.repository.delete(conversation_id)
 
 
-def get_ai_conversation_history_service() -> (
-    AIConversationHistoryService
-):
+def get_ai_conversation_history_service() -> AIConversationHistoryService:
     return AIConversationHistoryService()

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from contextlib import suppress
 from app.database.database import SessionLocal
 from app.db_models.ai_priority_prediction import (
     AIPriorityPrediction as DBAIPriorityPrediction,
@@ -16,10 +16,8 @@ class AIPriorityPredictionRepository:
     def __del__(self):
         """Close database session when repository is destroyed."""
         if hasattr(self, "db") and self.db:
-            try:
+            with suppress(Exception):
                 self.db.close()
-            except Exception:
-                pass
 
     async def create(
         self,
@@ -38,9 +36,7 @@ class AIPriorityPredictionRepository:
         self.db.commit()
         self.db.refresh(db_prediction)
 
-        return AIPriorityPrediction.model_validate(
-            db_prediction
-        )
+        return AIPriorityPrediction.model_validate(db_prediction)
 
     async def get_by_ticket_id(
         self,
@@ -48,18 +44,14 @@ class AIPriorityPredictionRepository:
     ) -> AIPriorityPrediction | None:
         prediction = (
             self.db.query(DBAIPriorityPrediction)
-            .filter(
-                DBAIPriorityPrediction.ticket_id == ticket_id
-            )
+            .filter(DBAIPriorityPrediction.ticket_id == ticket_id)
             .first()
         )
 
         if not prediction:
             return None
 
-        return AIPriorityPrediction.model_validate(
-            prediction
-        )
+        return AIPriorityPrediction.model_validate(prediction)
 
     async def update(
         self,
@@ -68,9 +60,7 @@ class AIPriorityPredictionRepository:
     ) -> AIPriorityPrediction | None:
         prediction = (
             self.db.query(DBAIPriorityPrediction)
-            .filter(
-                DBAIPriorityPrediction.ticket_id == ticket_id
-            )
+            .filter(DBAIPriorityPrediction.ticket_id == ticket_id)
             .first()
         )
 
@@ -84,9 +74,7 @@ class AIPriorityPredictionRepository:
         self.db.commit()
         self.db.refresh(prediction)
 
-        return AIPriorityPrediction.model_validate(
-            prediction
-        )
+        return AIPriorityPrediction.model_validate(prediction)
 
     async def delete(
         self,
@@ -94,9 +82,7 @@ class AIPriorityPredictionRepository:
     ) -> bool:
         prediction = (
             self.db.query(DBAIPriorityPrediction)
-            .filter(
-                DBAIPriorityPrediction.ticket_id == ticket_id
-            )
+            .filter(DBAIPriorityPrediction.ticket_id == ticket_id)
             .first()
         )
 
@@ -109,7 +95,5 @@ class AIPriorityPredictionRepository:
         return True
 
 
-def get_ai_priority_prediction_repository() -> (
-    AIPriorityPredictionRepository
-):
+def get_ai_priority_prediction_repository() -> AIPriorityPredictionRepository:
     return AIPriorityPredictionRepository()

@@ -28,7 +28,8 @@ class AIKnowledgeBaseService:
         self,
         data: AIKnowledgeBaseCreate,
     ) -> AIKnowledgeBase:
-        embedding = self.embedding_service.embed_text(data.content)
+        self.embedding_service.embed_text(data.content)
+
         knowledge = AIKnowledgeBase(
             id=0,
             document_title=data.document_title,
@@ -47,9 +48,7 @@ class AIKnowledgeBaseService:
         self,
         knowledge_id: int,
     ) -> AIKnowledgeBase | None:
-        return await self.repository.get_by_id(
-            knowledge_id
-        )
+        return await self.repository.get_by_id(knowledge_id)
 
     async def get_all_knowledge(
         self,
@@ -76,12 +75,8 @@ class AIKnowledgeBaseService:
         self,
         knowledge_id: int,
     ) -> bool:
-        return await self.repository.delete(
-            knowledge_id
-        )
+        return await self.repository.delete(knowledge_id)
 
 
-def get_ai_knowledge_base_service() -> (
-    AIKnowledgeBaseService
-):
+def get_ai_knowledge_base_service() -> AIKnowledgeBaseService:
     return AIKnowledgeBaseService()

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from contextlib import suppress
 from app.database.database import SessionLocal
 from app.db_models.ai_conversation_history import (
     AIConversationHistory as DBAIConversationHistory,
@@ -16,10 +16,8 @@ class AIConversationHistoryRepository:
     def __del__(self):
         """Close database session when repository is destroyed."""
         if hasattr(self, "db") and self.db:
-            try:
+            with suppress(Exception):
                 self.db.close()
-            except Exception:
-                pass
 
     async def create(
         self,
@@ -37,9 +35,7 @@ class AIConversationHistoryRepository:
         self.db.commit()
         self.db.refresh(db_conversation)
 
-        return AIConversationHistory.model_validate(
-            db_conversation
-        )
+        return AIConversationHistory.model_validate(db_conversation)
 
     async def get_by_ticket_id(
         self,
@@ -47,17 +43,12 @@ class AIConversationHistoryRepository:
     ) -> list[AIConversationHistory]:
         conversations = (
             self.db.query(DBAIConversationHistory)
-            .filter(
-                DBAIConversationHistory.ticket_id == ticket_id
-            )
+            .filter(DBAIConversationHistory.ticket_id == ticket_id)
             .order_by(DBAIConversationHistory.created_at.asc())
             .all()
         )
 
-        return [
-            AIConversationHistory.model_validate(item)
-            for item in conversations
-        ]
+        return [AIConversationHistory.model_validate(item) for item in conversations]
 
     async def update(
         self,
@@ -80,9 +71,7 @@ class AIConversationHistoryRepository:
         self.db.commit()
         self.db.refresh(conversation)
 
-        return AIConversationHistory.model_validate(
-            conversation
-        )
+        return AIConversationHistory.model_validate(conversation)
 
     async def delete(
         self,
@@ -103,7 +92,5 @@ class AIConversationHistoryRepository:
         return True
 
 
-def get_ai_conversation_history_repository() -> (
-    AIConversationHistoryRepository
-):
+def get_ai_conversation_history_repository() -> AIConversationHistoryRepository:
     return AIConversationHistoryRepository()

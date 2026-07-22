@@ -13,11 +13,7 @@ class NotificationService:
         self,
         repository: NotificationRepository | None = None,
     ):
-        self.repository = (
-            repository
-            if repository
-            else get_notification_repository()
-        )
+        self.repository = repository if repository else get_notification_repository()
 
     async def create_notification(
         self,

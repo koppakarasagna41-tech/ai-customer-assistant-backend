@@ -4,8 +4,7 @@ from fastapi.testclient import TestClient
 def test_rag_index_text_success(base_client: TestClient):
     payload = {
         "content": (
-            "Enterprise AI platform provides end-to-end RAG support and "
-            "intelligent analysis."
+            "Enterprise AI platform provides end-to-end RAG support and " "intelligent analysis."
         ),
         "filename": "ai_platform_guide.txt",
     }
@@ -144,18 +143,14 @@ def test_rag_delete_document_success(base_client: TestClient):
 
     doc_id = response.json()["data"]["document_id"]
 
-    delete_response = base_client.delete(
-        f"/api/v1/rag/documents/{doc_id}"
-    )
+    delete_response = base_client.delete(f"/api/v1/rag/documents/{doc_id}")
 
     assert delete_response.status_code == 200
     assert delete_response.json()["success"] is True
 
 
 def test_rag_delete_document_not_found(base_client: TestClient):
-    response = base_client.delete(
-        "/api/v1/rag/documents/DOC-NONEXISTENT"
-    )
+    response = base_client.delete("/api/v1/rag/documents/DOC-NONEXISTENT")
 
     assert response.status_code == 404
 

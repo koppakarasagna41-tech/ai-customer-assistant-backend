@@ -18,11 +18,7 @@ class AIPromptManagementService:
         self,
         repository: AIPromptManagementRepository | None = None,
     ):
-        self.repository = (
-            repository
-            if repository
-            else get_ai_prompt_management_repository()
-        )
+        self.repository = repository if repository else get_ai_prompt_management_repository()
 
     async def create_prompt(
         self,
@@ -44,9 +40,7 @@ class AIPromptManagementService:
         self,
         prompt_id: int,
     ) -> AIPromptManagement | None:
-        return await self.repository.get_by_id(
-            prompt_id
-        )
+        return await self.repository.get_by_id(prompt_id)
 
     async def get_all_prompts(
         self,
@@ -71,12 +65,8 @@ class AIPromptManagementService:
         self,
         prompt_id: int,
     ) -> bool:
-        return await self.repository.delete(
-            prompt_id
-        )
+        return await self.repository.delete(prompt_id)
 
 
-def get_ai_prompt_management_service() -> (
-    AIPromptManagementService
-):
+def get_ai_prompt_management_service() -> AIPromptManagementService:
     return AIPromptManagementService()

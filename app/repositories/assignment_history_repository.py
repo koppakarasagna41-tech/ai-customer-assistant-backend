@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from contextlib import suppress
 from app.database.database import SessionLocal
 from app.db_models.assignment_history import (
     AssignmentHistory as DBAssignmentHistory,
@@ -14,10 +14,9 @@ class AssignmentHistoryRepository:
     def __del__(self):
         """Close database session when repository is destroyed."""
         if hasattr(self, "db") and self.db:
-            try:
+            with suppress(Exception):
                 self.db.close()
-            except Exception:
-                pass
+                
 
     async def create(
         self,
@@ -45,10 +44,7 @@ class AssignmentHistoryRepository:
             .all()
         )
 
-        return [
-            AssignmentHistory.model_validate(item)
-            for item in assignments
-        ]
+        return [AssignmentHistory.model_validate(item) for item in assignments]
 
     async def get_by_id(
         self,

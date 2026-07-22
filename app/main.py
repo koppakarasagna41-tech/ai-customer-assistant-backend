@@ -8,23 +8,19 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from app.api.v1.notifications import router as notification_router
-from app.api.v1.attachments import router as attachment_router
-from app.api.v1.agents import router as agent_router
+
 from app.api.v1.activity_logs import (
     router as activity_logs_router,
 )
-from app.api.v1.ai_escalation_logic import (
-    router as ai_escalation_logic_router,
-)
+from app.api.v1.agents import router as agent_router
 from app.api.v1.ai_confidence_score import (
     router as ai_confidence_score_router,
 )
-from app.api.v1.audit_logs import (
-    router as audit_logs_router,
-)
 from app.api.v1.ai_conversation_history import (
     router as ai_conversation_history_router,
+)
+from app.api.v1.ai_escalation_logic import (
+    router as ai_escalation_logic_router,
 )
 from app.api.v1.ai_knowledge_base import (
     router as ai_knowledge_base_router,
@@ -32,35 +28,37 @@ from app.api.v1.ai_knowledge_base import (
 from app.api.v1.ai_priority_prediction import (
     router as ai_priority_prediction_router,
 )
-from app.api.v1.ai_ticket_classification import (
-    router as ai_ticket_classification_router,
-)
-from app.api.v1.user_preferences import (
-    router as user_preferences_router,
-)
-from app.api.v1.dashboard import (
-    router as dashboard_router,
-)
-
-
-from app.api.v1.refresh_tokens import (
-    router as refresh_tokens_router,
-)
-
-from app.api.v1.router import api_router
-from app.middleware.rate_limiter import RateLimiterMiddleware
-from app.middleware.ai_security import AISecurityMiddleware
-from app.middleware.request_validator import RequestValidatorMiddleware
-from app.schemas.error import ErrorDetail, ErrorResponse
-from app.api.v1.assignment_history import (
-    router as assignment_history_router,
+from app.api.v1.ai_prompt_management import (
+    router as ai_prompt_management_router,
 )
 from app.api.v1.ai_suggested_response import (
     router as ai_suggested_response_router,
 )
-from app.api.v1.ai_prompt_management import (
-    router as ai_prompt_management_router,
+from app.api.v1.ai_ticket_classification import (
+    router as ai_ticket_classification_router,
 )
+from app.api.v1.assignment_history import (
+    router as assignment_history_router,
+)
+from app.api.v1.attachments import router as attachment_router
+from app.api.v1.audit_logs import (
+    router as audit_logs_router,
+)
+from app.api.v1.dashboard import (
+    router as dashboard_router,
+)
+from app.api.v1.notifications import router as notification_router
+from app.api.v1.refresh_tokens import (
+    router as refresh_tokens_router,
+)
+from app.api.v1.router import api_router
+from app.api.v1.user_preferences import (
+    router as user_preferences_router,
+)
+from app.middleware.ai_security import AISecurityMiddleware
+from app.middleware.rate_limiter import RateLimiterMiddleware
+from app.middleware.request_validator import RequestValidatorMiddleware
+from app.schemas.error import ErrorDetail, ErrorResponse
 
 # Configure structured logging
 logging.basicConfig(
@@ -242,6 +240,7 @@ app.include_router(
     prefix="/api/v1/notifications",
     tags=["Notifications"],
 )
+
 
 # Standard Exception Handlers conforming to ErrorResponse schema
 @app.exception_handler(RequestValidationError)
