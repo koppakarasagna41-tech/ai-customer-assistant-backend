@@ -1,21 +1,25 @@
+import os
 from contextlib import suppress
+from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
 
 from app.database.database import SessionLocal
-from app.db_models.refresh_token import (
-    RefreshToken as DBRefreshToken,
-)
+from app.db_models.refresh_token import RefreshToken as DBRefreshToken
 from app.models.refresh_token import RefreshToken
 
 
 class RefreshTokenRepository:
     def __init__(self):
-        self.db: Session = SessionLocal()
+        self._memory_mode = os.getenv("DATABASE_URL") == "sqlite:///:memory:"
+        self._tokens: dict[str, RefreshToken] = {}
+
+        if not self._memory_mode:
+            self.db: Session = SessionLocal()
 
     def __del__(self):
         """Close database session when repository is destroyed."""
-        if hasattr(self, "db") and self.db:
+        if not self._memory_mode and hasattr(self, "db") and self.db:
             with suppress(Exception):
                 self.db.close()
 
@@ -23,6 +27,10 @@ class RefreshTokenRepository:
         self,
         refresh_token: RefreshToken,
     ) -> RefreshToken:
+        if self._memory_mode:
+            self._tokens[refresh_token.refresh_token] = refresh_token
+            return refresh_token
+
         db_refresh_token = DBRefreshToken(
             user_id=refresh_token.user_id,
             refresh_token=refresh_token.refresh_token,
@@ -40,8 +48,13 @@ class RefreshTokenRepository:
         self,
         token: str,
     ) -> RefreshToken | None:
+        if self._memory_mode:
+            return self._tokens.get(token)
+
         refresh_token = (
-            self.db.query(DBRefreshToken).filter(DBRefreshToken.refresh_token == token).first()
+            self.db.query(DBRefreshToken)
+            .filter(DBRefreshToken.refresh_token == token)
+            .first()
         )
 
         if not refresh_token:
@@ -53,8 +66,19 @@ class RefreshTokenRepository:
         self,
         token: str,
     ) -> bool:
+        if self._memory_mode:
+            refresh_token = self._tokens.get(token)
+            if not refresh_token:
+                return False
+
+            refresh_token.is_revoked = True
+            self._tokens[token] = refresh_token
+            return True
+
         refresh_token = (
-            self.db.query(DBRefreshToken).filter(DBRefreshToken.refresh_token == token).first()
+            self.db.query(DBRefreshToken)
+            .filter(DBRefreshToken.refresh_token == token)
+            .first()
         )
 
         if not refresh_token:
@@ -68,7 +92,18 @@ class RefreshTokenRepository:
         return True
 
     async def delete_expired(self) -> int:
-        from datetime import UTC, datetime
+        if self._memory_mode:
+            now = datetime.now(UTC)
+            expired = [
+                token
+                for token, value in self._tokens.items()
+                if value.expires_at < now
+            ]
+
+            for token in expired:
+                del self._tokens[token]
+
+            return len(expired)
 
         expired_tokens = (
             self.db.query(DBRefreshToken)
@@ -86,5 +121,8 @@ class RefreshTokenRepository:
         return count
 
 
+_refresh_token_repo = RefreshTokenRepository()
+
+
 def get_refresh_token_repository() -> RefreshTokenRepository:
-    return RefreshTokenRepository()
+    return _refresh_token_repo

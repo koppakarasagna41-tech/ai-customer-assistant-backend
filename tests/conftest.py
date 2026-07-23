@@ -12,6 +12,7 @@ os.environ["GEMINI_API_KEY"] = "mock-gemini-api-key-for-testing"
 os.environ["JWT_SECRET"] = "mock-jwt-secret-key-for-testing-purposes-123"
 os.environ["JWT_ALGORITHM"] = "HS256"
 os.environ["ACCESS_TOKEN_EXPIRE_MINUTES"] = "30"
+os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
