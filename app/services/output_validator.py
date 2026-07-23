@@ -45,7 +45,9 @@ class OutputValidator:
                 ),
                 intent=str(data.get("intent", "general_inquiry")),
                 sentiment=str(data.get("sentiment", "neutral")),
-                category=str(data.get("category", "general")),
+                category=str(
+                    data.get("category", data.get("predicted_category", "general"))
+                ),
                 urgency=str(data.get("urgency", "medium")),
                 entities=dict(data.get("entities", {})),
                 suggested_actions=[

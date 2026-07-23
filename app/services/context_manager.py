@@ -2,6 +2,7 @@ import logging
 from typing import Any
 
 from app.repositories.ticket_repository import get_ticket_repository
+from app.schemas.filter import TicketFilterParams
 
 logger = logging.getLogger("app.services.context_manager")
 
@@ -33,18 +34,22 @@ class ContextManager:
         if user_id:
             try:
                 # Get user's tickets if possible or provide general stats
-                tickets, _ = await self.ticket_repo.list_and_filter(filters=None, page=1, size=10)
-                user_tickets = [
-                    {
-                        "ticket_id": t.ticket_id,
-                        "title": t.title,
-                        "status": t.status,
-                        "priority": t.priority,
-                        "category": t.category,
-                    }
-                    for t in tickets
-                    if getattr(t, "user_id", None) == user_id or t.status == "open"
-                ]
+                filters = TicketFilterParams()
+                tickets, _ = await self.ticket_repo.list_and_filter(filters=filters, page=1, size=10)
+                user_tickets = []
+                for t in tickets or []:
+                    if not t:
+                        continue
+                    if getattr(t, "user_id", None) == user_id or getattr(t, "status", None) == "open":
+                        user_tickets.append(
+                            {
+                                "ticket_id": getattr(t, "ticket_id", None),
+                                "title": getattr(t, "title", ""),
+                                "status": getattr(t, "status", ""),
+                                "priority": getattr(t, "priority", ""),
+                                "category": getattr(t, "category", "general"),
+                            }
+                        )
                 context["active_tickets"] = user_tickets[:5]  # Limit to top 5
             except Exception as e:
                 logger.warning(f"Failed to fetch tickets for context builder: {e}")

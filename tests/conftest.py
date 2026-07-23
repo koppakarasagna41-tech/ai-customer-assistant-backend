@@ -18,6 +18,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.api.v1.router import api_router
+from app.database import create_tables  # Ensure test database tables exist before tests run
 from app.repositories.ticket_repository import get_ticket_repository
 from app.repositories.user_repository import get_user_repository
 from app.services.gemini_client import GeminiClient
@@ -92,18 +93,19 @@ def mock_gemini_client(monkeypatch) -> None:
     ) -> dict:
         # Default mock structure returning valid JSON
         mock_response = {
-            "response": (
-                "Thank you for contacting customer support. We are looking into " "your query."
-            ),
-            "intent": "SUPPORT_QUERY",
-            "sentiment": "neutral",
-            "predicted_category": "technical",
-            "urgency": "medium",
-            "confidence": 0.92,
-            "escalated": False,
-            "reason": "Standard user support question without risk signals.",
-        }
-
+    "response": (
+        "Thank you for contacting customer support. We are looking into "
+        "your query."
+    ),
+    "intent": "SUPPORT_QUERY",
+    "predicted_category": "technical",
+    "confidence_score": 0.98,
+    "priority": "high",
+    "sentiment": "neutral",
+    "urgency": "medium",
+    "escalated": False,
+    "reasoning": "Mock AI response",
+}
         # If application/json is requested, return JSON encoded string as output
         if response_mime_type == "application/json":
             text_content = json.dumps(mock_response)
