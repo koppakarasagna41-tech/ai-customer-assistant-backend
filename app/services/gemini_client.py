@@ -82,8 +82,7 @@ class GeminiClient:
         model_name: str = "gemini-flash-latest",
     ):
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
-        if not self.api_key:
-            raise ValueError("GEMINI_API_KEY is not configured in the environment.")
+        self.offline_mode = not bool(self.api_key)
         self.model_name = model_name
         self.base_url = "https://generativelanguage.googleapis.com/v1beta/models"
         # Initialize circuit breaker for API calls
@@ -92,6 +91,11 @@ class GeminiClient:
             recovery_timeout=60,
             expected_exception=Exception,
         )
+
+        if self.offline_mode:
+            logger.warning(
+                "Gemini API key not configured. GeminiClient is running in offline fallback mode."
+            )
 
     @staticmethod
     def _perform_request(request: urllib.request.Request) -> str:
@@ -140,6 +144,22 @@ class GeminiClient:
         # Retry logic with exponential backoff
         max_retries = 3
         backoff = 1.0
+
+        if self.offline_mode:
+            # Offline fallback mode returns a safe minimal structured response.
+            if response_mime_type == "application/json":
+                return {
+                    "candidates": [
+                        {
+                            "content": {
+                                "parts": [
+                                    {"text": json.dumps({"answer": "Unable to generate a Gemini response in offline mode."})}
+                                ]
+                            }
+                        }
+                    ]
+                }
+            return {"candidates": [{"content": {"parts": [{"text": "Offline Gemini fallback response."}]}}]}
 
         for attempt in range(max_retries):
             try:

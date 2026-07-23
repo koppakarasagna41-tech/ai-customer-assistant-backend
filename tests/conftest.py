@@ -20,11 +20,13 @@ from app.api.v1.router import api_router
 from app.repositories.ticket_repository import get_ticket_repository
 from app.repositories.user_repository import get_user_repository
 from app.services.gemini_client import GeminiClient
+from app.services.vector_store import VectorStoreFactory
 
 
 # Create a clean test FastAPI application
 @pytest.fixture(scope="session")
 def app() -> FastAPI:
+    VectorStoreFactory.set_provider("in_memory")
     application = FastAPI(title="Enterprise AI Support - Test Workspace")
     application.include_router(api_router, prefix="/api/v1")
     return application
