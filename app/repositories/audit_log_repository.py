@@ -1,7 +1,5 @@
-from contextlib import suppress
-
 from sqlalchemy.orm import Session
-
+from contextlib import suppress
 from app.database.database import SessionLocal
 from app.db_models.audit_log import AuditLog as DBAuditLog
 from app.models.audit_log import AuditLog
@@ -16,6 +14,7 @@ class AuditLogRepository:
         if hasattr(self, "db") and self.db:
             with suppress(Exception):
                 self.db.close()
+                
 
     async def create(
         self,

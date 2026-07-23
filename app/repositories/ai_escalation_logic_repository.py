@@ -1,7 +1,5 @@
-from contextlib import suppress
-
 from sqlalchemy.orm import Session
-
+from contextlib import suppress
 from app.database.database import SessionLocal
 from app.db_models.ai_escalation_logic import (
     AIEscalationLogic as DBAIEscalationLogic,
@@ -20,6 +18,7 @@ class AIEscalationLogicRepository:
         if hasattr(self, "db") and self.db:
             with suppress(Exception):
                 self.db.close()
+                
 
     async def create(
         self,
