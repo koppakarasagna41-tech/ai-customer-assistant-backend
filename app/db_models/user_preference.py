@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, func
 
 from app.database.database import Base
 
@@ -16,6 +16,7 @@ class UserPreference(Base):
     push_notifications = Column(Boolean, default=True, nullable=False)
     created_at = Column(
         DateTime,
+        server_default=func.now(),
         default=datetime.utcnow,
         nullable=False,
     )

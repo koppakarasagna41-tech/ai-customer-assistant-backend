@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text, func
 
 from app.database.database import Base
 
@@ -16,14 +16,15 @@ class Notification(Base):
 
     message = Column(Text, nullable=False)
 
-    type = Column(String(50), default="info")
+    type = Column(String(50), default="info", nullable=False)
 
-    is_read = Column(Boolean, default=False)
+    is_read = Column(Boolean, default=False, nullable=False)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, server_default=func.now(), default=datetime.utcnow)
 
     updated_at = Column(
         DateTime,
+        server_default=func.now(),
+        onupdate=func.now(),
         default=datetime.utcnow,
-        onupdate=datetime.utcnow,
     )

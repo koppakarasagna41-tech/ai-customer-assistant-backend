@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Float, Integer, String
+from sqlalchemy import Column, DateTime, Float, Integer, String, func
 
 from app.database.database import Base
 
@@ -32,6 +32,7 @@ class AIConfidenceScore(Base):
 
     created_at = Column(
         DateTime,
+        server_default=func.now(),
         default=datetime.utcnow,
         nullable=False,
     )

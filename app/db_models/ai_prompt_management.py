@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text, func
 
 from app.database.database import Base
 
@@ -38,6 +38,7 @@ class AIPromptManagement(Base):
 
     created_at = Column(
         DateTime,
+        server_default=func.now(),
         default=datetime.utcnow,
         nullable=False,
     )

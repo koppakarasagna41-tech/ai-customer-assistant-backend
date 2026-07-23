@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import JSON, Column, DateTime, ForeignKey, String, Text
+from sqlalchemy import JSON, Column, DateTime, ForeignKey, String, Text, func
 from sqlalchemy.orm import relationship
 
 from app.database.database import Base
@@ -21,8 +21,8 @@ class TicketTimeline(Base):
     actor = Column(String(100), nullable=False)
     description = Column(Text, nullable=False)
 
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime, server_default=func.now(), default=datetime.utcnow)
 
-    metadata_json = Column(JSON, default=dict)
+    metadata_json = Column(JSON, nullable=True, default=dict)
 
     ticket = relationship("Ticket", back_populates="timeline")

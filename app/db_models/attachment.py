@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import relationship
 
 from app.database.database import Base
@@ -25,6 +25,6 @@ class Attachment(Base):
 
     file_size = Column(Integer, nullable=False)
 
-    uploaded_at = Column(DateTime, default=datetime.utcnow)
+    uploaded_at = Column(DateTime, server_default=func.now(), default=datetime.utcnow)
 
     ticket = relationship("Ticket")

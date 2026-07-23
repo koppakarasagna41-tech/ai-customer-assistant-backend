@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, ForeignKey, String, Text
+from sqlalchemy import Column, DateTime, ForeignKey, String, Text, func
 from sqlalchemy.orm import relationship
 
 from app.database.database import Base
@@ -20,6 +20,6 @@ class TicketComment(Base):
     author = Column(String(100), nullable=False)
     content = Column(Text, nullable=False)
 
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime, server_default=func.now(), default=datetime.utcnow)
 
     ticket = relationship("Ticket", back_populates="comments")

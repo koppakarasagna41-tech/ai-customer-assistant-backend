@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Float, Integer, String, Text
+from sqlalchemy import Column, DateTime, Float, Integer, String, Text, func
 
 from app.database.database import Base
 
@@ -44,6 +44,7 @@ class AISuggestedResponse(Base):
 
     created_at = Column(
         DateTime,
+        server_default=func.now(),
         default=datetime.utcnow,
         nullable=False,
     )

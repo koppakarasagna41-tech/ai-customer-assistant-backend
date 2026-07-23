@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, func
 
 from app.database.database import Base
 
@@ -18,6 +18,7 @@ class ActivityLog(Base):
     performed_by = Column(String, nullable=False)
     created_at = Column(
         DateTime,
+        server_default=func.now(),
         default=datetime.utcnow,
         nullable=False,
     )
