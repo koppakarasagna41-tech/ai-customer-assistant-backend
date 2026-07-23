@@ -20,10 +20,9 @@ class AIKnowledgeBaseRepository:
         if hasattr(self, "db") and self.db:
             with suppress(Exception):
                 self.db.close()
-                
 
     async def create(
-        self, 
+        self,
         knowledge: AIKnowledgeBase,
     ) -> AIKnowledgeBase:
         db_knowledge = DBAIKnowledgeBase(
