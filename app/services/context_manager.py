@@ -35,12 +35,17 @@ class ContextManager:
             try:
                 # Get user's tickets if possible or provide general stats
                 filters = TicketFilterParams()
-                tickets, _ = await self.ticket_repo.list_and_filter(filters=filters, page=1, size=10)
+                tickets, _ = await self.ticket_repo.list_and_filter(
+                    filters=filters, page=1, size=10
+                )
                 user_tickets = []
                 for t in tickets or []:
                     if not t:
                         continue
-                    if getattr(t, "user_id", None) == user_id or getattr(t, "status", None) == "open":
+                    if (
+                        getattr(t, "user_id", None) == user_id
+                        or getattr(t, "status", None) == "open"
+                    ):
                         user_tickets.append(
                             {
                                 "ticket_id": getattr(t, "ticket_id", None),

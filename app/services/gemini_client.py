@@ -115,12 +115,25 @@ class GeminiClient:
         category = "general"
         if "billing" in combined_text or "invoice" in combined_text or "charged" in combined_text:
             category = "billing"
-        elif "account" in combined_text or "login" in combined_text or "okta" in combined_text or "sso" in combined_text:
+        elif (
+            "account" in combined_text
+            or "login" in combined_text
+            or "okta" in combined_text
+            or "sso" in combined_text
+        ):
             category = "technical"
-        elif "password" in combined_text or "authentication" in combined_text or "credentials" in combined_text:
+        elif (
+            "password" in combined_text
+            or "authentication" in combined_text
+            or "credentials" in combined_text
+        ):
             category = "account"
 
-        priority = "high" if any(keyword in combined_text for keyword in ["urgent", "timeout", "failed", "issue"]) else "medium"
+        priority = (
+            "high"
+            if any(keyword in combined_text for keyword in ["urgent", "timeout", "failed", "issue"])
+            else "medium"
+        )
 
         response_data = {
             "response": (

@@ -3,6 +3,8 @@ import sys
 from collections.abc import Generator
 
 import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 # Ensure the app directory is in the import path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -14,11 +16,8 @@ os.environ["JWT_ALGORITHM"] = "HS256"
 os.environ["ACCESS_TOKEN_EXPIRE_MINUTES"] = "30"
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-
+import app.database.create_tables
 from app.api.v1.router import api_router
-from app.database import create_tables  # Ensure test database tables exist before tests run
 from app.repositories.ticket_repository import get_ticket_repository
 from app.repositories.user_repository import get_user_repository
 from app.services.gemini_client import GeminiClient
@@ -93,19 +92,18 @@ def mock_gemini_client(monkeypatch) -> None:
     ) -> dict:
         # Default mock structure returning valid JSON
         mock_response = {
-    "response": (
-        "Thank you for contacting customer support. We are looking into "
-        "your query."
-    ),
-    "intent": "SUPPORT_QUERY",
-    "predicted_category": "technical",
-    "confidence_score": 0.98,
-    "priority": "high",
-    "sentiment": "neutral",
-    "urgency": "medium",
-    "escalated": False,
-    "reasoning": "Mock AI response",
-}
+            "response": (
+                "Thank you for contacting customer support. We are looking into " "your query."
+            ),
+            "intent": "SUPPORT_QUERY",
+            "predicted_category": "technical",
+            "confidence_score": 0.98,
+            "priority": "high",
+            "sentiment": "neutral",
+            "urgency": "medium",
+            "escalated": False,
+            "reasoning": "Mock AI response",
+        }
         # If application/json is requested, return JSON encoded string as output
         if response_mime_type == "application/json":
             text_content = json.dumps(mock_response)
