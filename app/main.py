@@ -86,6 +86,7 @@ app = FastAPI(
 # CORS configuration
 allowed_origins = [
     "http://localhost:3000",
+    "http://localhost:3003",
     "http://localhost:5173",
     "https://ais-dev-opjdsuxw3p6deotmhqvdse-38002326166.asia-southeast1.run.app",
     "https://ais-pre-opjdsuxw3p6deotmhqvdse-38002326166.asia-southeast1.run.app",
