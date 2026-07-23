@@ -46,6 +46,10 @@ class ConversationRepository:
         )
         return [Conversation.model_validate(row) for row in rows]
 
+    async def list_all(self) -> list[Conversation]:
+        rows = self.db.query(DBConversation).order_by(DBConversation.updated_at.desc()).all()
+        return [Conversation.model_validate(row) for row in rows]
+
     async def update(self, conversation: Conversation) -> Conversation:
         row = (
             self.db.query(DBConversation)

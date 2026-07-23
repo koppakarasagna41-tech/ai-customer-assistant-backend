@@ -1,10 +1,22 @@
-from fastapi import APIRouter, Depends, HTTPException, Path, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 
 from app.models.conversation import Conversation
 from app.schemas.conversation import ConversationState
 from app.services.conversation_service import ConversationService, get_conversation_service
 
 router = APIRouter()
+
+
+@router.get(
+    "/conversations",
+    response_model=list[Conversation],
+    status_code=status.HTTP_200_OK,
+)
+async def list_conversations(
+    user_id: str | None = Query(None, description="Filter conversations by user ID"),
+    service: ConversationService = Depends(get_conversation_service),
+):
+    return await service.list_conversations(user_id)
 
 
 @router.post(

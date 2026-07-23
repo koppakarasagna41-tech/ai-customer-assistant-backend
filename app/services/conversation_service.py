@@ -25,8 +25,10 @@ class ConversationService:
     async def get_conversation(self, session_id: str) -> Conversation | None:
         return await self.repository.get_by_id(session_id)
 
-    async def list_user_conversations(self, user_id: str) -> list[Conversation]:
-        return await self.repository.list_by_user(user_id)
+    async def list_conversations(self, user_id: str | None = None) -> list[Conversation]:
+        if user_id:
+            return await self.repository.list_by_user(user_id)
+        return await self.repository.list_all()
 
     async def update_conversation(self, data: ConversationState) -> Conversation:
         conversation = Conversation(
