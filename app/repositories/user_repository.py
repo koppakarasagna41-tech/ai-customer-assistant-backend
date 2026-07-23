@@ -1,6 +1,7 @@
 import asyncio
-from datetime import UTC, datetime
 from contextlib import suppress
+from datetime import UTC, datetime
+
 from sqlalchemy.orm import Session
 
 from app.database.database import SessionLocal
@@ -19,10 +20,9 @@ class UserRepository:
     def __del__(self):
         """Close database session when repository is destroyed."""
         if hasattr(self, "db") and self.db:
-            try:
+            with suppress(Exception):
                 self.db.close()
-            except Exception:
-                pass
+                
 
     def _seed_data(self) -> None:
         if self._users:

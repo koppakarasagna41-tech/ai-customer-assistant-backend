@@ -1,5 +1,7 @@
-from sqlalchemy.orm import Session
 from contextlib import suppress
+
+from sqlalchemy.orm import Session
+
 from app.database.database import SessionLocal
 from app.db_models.ticket_timeline import TicketTimeline as DBTicketTimeline
 from app.models.ticket_timeline import TicketTimelineEntry

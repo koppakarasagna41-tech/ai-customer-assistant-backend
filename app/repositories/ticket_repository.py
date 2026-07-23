@@ -1,7 +1,8 @@
 import asyncio
+from contextlib import suppress
 from datetime import UTC, datetime
 from typing import Any
-from contextlib import suppress
+
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 

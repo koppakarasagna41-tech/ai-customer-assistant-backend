@@ -1,5 +1,7 @@
-from sqlalchemy.orm import Session
 from contextlib import suppress
+
+from sqlalchemy.orm import Session
+
 from app.database.database import SessionLocal
 from app.db_models.notification import Notification as DBNotification
 from app.models.notification import Notification

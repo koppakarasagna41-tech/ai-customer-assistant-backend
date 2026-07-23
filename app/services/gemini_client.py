@@ -6,13 +6,13 @@ import os
 import time
 import urllib.error
 import urllib.request
-from enum import Enum
+from enum import StrEnum
 from typing import Any, cast
 
 logger = logging.getLogger("app.services.gemini_client")
 
 
-from enum import StrEnum
+
 class CircuitBreakerState(StrEnum):
     """States for the circuit breaker pattern."""
 
@@ -191,11 +191,11 @@ class GeminiClient:
                 if attempt == max_retries - 1:
                     self.circuit_breaker._on_failure()
                     raise ValueError(
-    (
+    
         f"Gemini API returned error: "
         f"{e.code} - {e.reason}. "
         f"Body: {error_body[:500]}"
-    )
+    
 ) from e
                 await asyncio.sleep(backoff)
                 backoff *= 2

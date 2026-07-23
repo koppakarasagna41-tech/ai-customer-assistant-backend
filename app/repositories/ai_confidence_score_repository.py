@@ -1,5 +1,7 @@
-from sqlalchemy.orm import Session
 from contextlib import suppress
+
+from sqlalchemy.orm import Session
+
 from app.database.database import SessionLocal
 from app.db_models.ai_confidence_score import (
     AIConfidenceScore as DBAIConfidenceScore,
@@ -16,11 +18,9 @@ class AIConfidenceScoreRepository:
     def __del__(self):
         """Close database session when repository is destroyed."""
         if hasattr(self, "db") and self.db:
-            try:
+            with suppress(Exception):
                 self.db.close()
-            except Exception:
-                pass
-
+                
     async def create(
         self,
         confidence: AIConfidenceScore,

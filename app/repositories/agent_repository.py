@@ -1,7 +1,8 @@
 import random
+from contextlib import suppress
 
 from sqlalchemy.orm import Session
-from contextlib import suppress
+
 from app.database.database import SessionLocal
 from app.db_models.agent import Agent as DBAgent
 from app.models.agent import Agent
