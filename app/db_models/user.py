@@ -19,4 +19,9 @@ class User(Base):
     is_active = Column(Boolean, default=True, nullable=False)
 
     created_at = Column(DateTime, server_default=func.now(), default=datetime.utcnow)
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), default=datetime.utcnow)
+    updated_at = Column(
+        DateTime,
+        server_default=func.now(),
+        onupdate=func.now(),
+        default=datetime.utcnow,
+    )
