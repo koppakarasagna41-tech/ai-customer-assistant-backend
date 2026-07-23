@@ -52,9 +52,7 @@ class RefreshTokenRepository:
             return self._tokens.get(token)
 
         refresh_token = (
-            self.db.query(DBRefreshToken)
-            .filter(DBRefreshToken.refresh_token == token)
-            .first()
+            self.db.query(DBRefreshToken).filter(DBRefreshToken.refresh_token == token).first()
         )
 
         if not refresh_token:
@@ -76,9 +74,7 @@ class RefreshTokenRepository:
             return True
 
         refresh_token = (
-            self.db.query(DBRefreshToken)
-            .filter(DBRefreshToken.refresh_token == token)
-            .first()
+            self.db.query(DBRefreshToken).filter(DBRefreshToken.refresh_token == token).first()
         )
 
         if not refresh_token:
@@ -94,11 +90,7 @@ class RefreshTokenRepository:
     async def delete_expired(self) -> int:
         if self._memory_mode:
             now = datetime.now(UTC)
-            expired = [
-                token
-                for token, value in self._tokens.items()
-                if value.expires_at < now
-            ]
+            expired = [token for token, value in self._tokens.items() if value.expires_at < now]
 
             for token in expired:
                 del self._tokens[token]
