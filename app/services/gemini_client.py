@@ -153,13 +153,26 @@ class GeminiClient:
                         {
                             "content": {
                                 "parts": [
-                                    {"text": json.dumps({"answer": "Unable to generate a Gemini response in offline mode."})}
+                                    {
+                                        "text": json.dumps(
+                                            {
+                                                "answer": (
+                                                    "Unable to generate a Gemini response "
+                                                    "in offline mode."
+                                                )
+                                            }
+                                        )
+                                    }
                                 ]
                             }
                         }
                     ]
                 }
-            return {"candidates": [{"content": {"parts": [{"text": "Offline Gemini fallback response."}]}}]}
+            return {
+                "candidates": [
+                    {"content": {"parts": [{"text": "Offline Gemini fallback response."}]}}
+                ]
+            }
 
         for attempt in range(max_retries):
             try:
