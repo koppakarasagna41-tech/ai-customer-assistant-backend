@@ -97,7 +97,7 @@ def mock_gemini_client(monkeypatch) -> None:
             ),
             "intent": "SUPPORT_QUERY",
             "sentiment": "neutral",
-            "category": "technical",
+            "predicted_category": "technical",
             "urgency": "medium",
             "confidence": 0.92,
             "escalated": False,

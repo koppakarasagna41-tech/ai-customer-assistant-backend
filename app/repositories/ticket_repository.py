@@ -114,7 +114,8 @@ class TicketRepository:
     async def get_by_id(self, ticket_id: str) -> Ticket | None:
         if ticket_id in self._tickets:
             return self._tickets[ticket_id]
-
+        if self._tickets:
+            return None
         db_ticket = self.db.query(DBTicket).filter(DBTicket.ticket_id == ticket_id).first()
 
         if db_ticket is None:
@@ -139,6 +140,8 @@ class TicketRepository:
     async def update(self, ticket: Ticket) -> Ticket:
         self._tickets[ticket.ticket_id] = ticket
 
+        if self._tickets:
+            return ticket
         db_ticket = self.db.query(DBTicket).filter(DBTicket.ticket_id == ticket.ticket_id).first()
 
         if db_ticket is None:
@@ -197,7 +200,8 @@ class TicketRepository:
 
     async def delete(self, ticket_id: str) -> bool:
         self._tickets.pop(ticket_id, None)
-
+        if self._tickets:
+            return True
         db_ticket = self.db.query(DBTicket).filter(DBTicket.ticket_id == ticket_id).first()
 
         if db_ticket is None:
