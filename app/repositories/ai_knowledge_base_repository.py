@@ -22,7 +22,7 @@ class AIKnowledgeBaseRepository:
                 self.db.close()
 
     async def create(
-        self, 
+        self,
         knowledge: AIKnowledgeBase,
     ) -> AIKnowledgeBase:
         db_knowledge = DBAIKnowledgeBase(

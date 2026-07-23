@@ -17,11 +17,7 @@ class AIKnowledgeBaseService:
         self,
         repository: AIKnowledgeBaseRepository | None = None,
     ):
-        self.repository = (
-            repository
-            if repository
-            else get_ai_knowledge_base_repository()
-        )
+        self.repository = repository if repository else get_ai_knowledge_base_repository()
         self.embedding_service = EmbeddingService()
 
     async def create_knowledge(

@@ -20,7 +20,7 @@ class AISuggestedResponseRepository:
         if hasattr(self, "db") and self.db:
             with suppress(Exception):
                 self.db.close()
-                
+
     async def create(
         self,
         response: AISuggestedResponse,

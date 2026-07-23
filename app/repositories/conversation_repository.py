@@ -15,7 +15,6 @@ class ConversationRepository:
         if hasattr(self, "db") and self.db:
             with suppress(Exception):
                 self.db.close()
-                
 
     async def create(self, conversation: Conversation) -> Conversation:
         db_item = DBConversation(

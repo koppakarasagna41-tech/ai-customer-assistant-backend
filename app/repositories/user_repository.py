@@ -22,7 +22,6 @@ class UserRepository:
         if hasattr(self, "db") and self.db:
             with suppress(Exception):
                 self.db.close()
-                
 
     def _seed_data(self) -> None:
         if self._users:

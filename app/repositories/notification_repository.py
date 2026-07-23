@@ -16,6 +16,7 @@ class NotificationRepository:
         if hasattr(self, "db") and self.db:
             with suppress(Exception):
                 self.db.close()
+
     async def create(self, notification: Notification) -> Notification:
         db_notification = DBNotification(
             user_id=notification.user_id,

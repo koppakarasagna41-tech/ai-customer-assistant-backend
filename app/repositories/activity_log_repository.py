@@ -16,7 +16,6 @@ class ActivityLogRepository:
         if hasattr(self, "db") and self.db:
             with suppress(Exception):
                 self.db.close()
-                
 
     async def create(
         self,
